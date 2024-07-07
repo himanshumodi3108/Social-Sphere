@@ -4,7 +4,7 @@
 //const URL = isDev ? 'http://localhost:3000' : 'https://himanshu-social-sphere.vercel.app/'
 const io = require("socket.io")(8800, {
   cors: {
-    origin: 'http://localhost:3000' || 'https://himanshu-social-sphere.vercel.app/',
+    origin: 'http://localhost:3000',
   },
 });
 
