@@ -1,10 +1,10 @@
-const express = require("express");
-const app = express();
-const isDev = app.settings.env === 'development'
-const URL = isDev ? 'http://localhost:3000' : 'https://himanshu-social-sphere.vercel.app/'
+//const express = require("express");
+//const app = express();
+//const isDev = app.settings.env === 'development'
+//const URL = isDev ? 'http://localhost:3000' : 'https://himanshu-social-sphere.vercel.app/'
 const io = require("socket.io")(8800, {
   cors: {
-    origin: URL,
+    origin: 'http://localhost:3000' || 'https://himanshu-social-sphere.vercel.app/',
   },
 });
 
