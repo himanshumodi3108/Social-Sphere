@@ -1,0 +1,14 @@
+{
+  "name": "socialsphere",
+  "version": "1.0.0",
+  "description": "Social media application",
+  "main": "index.js",
+  "scripts": {
+    "install-server": "cd server && npm install",
+    "start-server": "cd server && node index.js",
+    "build": "npm run install-server",
+    "start": "npm run start-server"
+  },
+  "author": "",
+  "license": "ISC"
+}
