@@ -1,6 +1,7 @@
 import axios from "axios";
+import { getBaseUrl } from '../config';
 
-const API = axios.create({ baseURL: "https://socialsphere1-4z6x.onrender.com" });
+const API = axios.create({ baseURL: getBaseUrl() });
 
 API.interceptors.request.use((req) => {
   if (localStorage.getItem("profile")) {
