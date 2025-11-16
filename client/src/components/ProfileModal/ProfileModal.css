@@ -1,0 +1,71 @@
+.infoForm {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.infoInput {
+  border: none;
+  outline: none;
+  background-color: var(--inputColor);
+  padding: 20px;
+  border-radius: 5px;
+}
+
+.infoButton {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-width: 120px;
+  height: auto;
+  color: white;
+}
+
+.infoButton:hover {
+  opacity: 0.9;
+}
+
+.privacy-section {
+  border-top: 1px solid var(--inputColor);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.privacy-section h4 {
+  margin: 0 0 1rem 0;
+  color: var(--textColor);
+}
+
+.privacy-item {
+  margin-bottom: 1rem;
+}
+
+.privacy-item label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.privacy-item select {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--inputColor);
+  background-color: var(--inputColor);
+  color: var(--textColor);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.privacy-item select:focus {
+  outline: 2px solid #0096FF;
+  border-color: #0096FF;
+}
+

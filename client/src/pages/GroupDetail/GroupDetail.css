@@ -1,0 +1,220 @@
+.GroupDetail {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--inputColor);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+  font-size: 14px;
+}
+
+.back-button:hover {
+  background-color: var(--gray);
+}
+
+.group-header {
+  background-color: var(--cardColor);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.group-cover {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.group-info {
+  padding: 1.5rem;
+}
+
+.group-profile-section {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.group-details {
+  flex: 1;
+}
+
+.group-details h1 {
+  margin: 0 0 0.5rem 0;
+}
+
+.group-description {
+  color: var(--gray);
+  margin: 0.5rem 0;
+}
+
+.group-meta {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--gray);
+  font-size: 14px;
+  margin-top: 0.5rem;
+}
+
+.group-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.join-group-btn,
+.leave-group-btn,
+.edit-group-btn,
+.delete-group-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.join-group-btn {
+  background-color: #0096FF;
+  color: white;
+}
+
+.join-group-btn:hover {
+  background-color: #007acc;
+}
+
+.leave-group-btn {
+  background-color: var(--gray);
+  color: var(--textColor);
+}
+
+.leave-group-btn:hover {
+  background-color: #ff4444;
+  color: white;
+}
+
+.edit-group-btn {
+  background-color: var(--inputColor);
+  color: var(--textColor);
+}
+
+.edit-group-btn:hover {
+  background-color: var(--gray);
+}
+
+.delete-group-btn {
+  background-color: #ff4444;
+  color: white;
+}
+
+.delete-group-btn:hover {
+  background-color: #cc0000;
+}
+
+.group-rules,
+.group-members,
+.group-posts {
+  background-color: var(--cardColor);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.group-rules h3,
+.group-members h3,
+.group-posts h3 {
+  margin: 0 0 1rem 0;
+}
+
+.group-rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.group-rules li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--inputColor);
+}
+
+.group-rules li:last-child {
+  border-bottom: none;
+}
+
+.members-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.member-item:hover {
+  background-color: var(--inputColor);
+}
+
+.member-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.member-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.member-role {
+  font-size: 12px;
+  color: var(--gray);
+  text-transform: capitalize;
+}
+
+.more-members {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  color: var(--gray);
+  font-size: 14px;
+}
+
+.join-prompt {
+  text-align: center;
+  padding: 3rem;
+  background-color: var(--cardColor);
+  border-radius: 12px;
+}
+
+.join-prompt p {
+  margin-bottom: 1rem;
+  color: var(--gray);
+}
+
+.group-loading,
+.group-error {
+  text-align: center;
+  padding: 3rem;
+  color: var(--gray);
+}
+

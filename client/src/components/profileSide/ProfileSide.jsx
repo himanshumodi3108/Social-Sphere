@@ -9,11 +9,9 @@ const ProfileSide = () => {
       <div style={{paddingBottom:"10px", marginLeft:"35px"}}>
       <LogoSearch/>
       </div>
-        
         <ProfileCard location = 'homepage'/>
         <FollowersCard/>
     </div>
     )
 }
-
 export default ProfileSide

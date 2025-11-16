@@ -1,0 +1,9 @@
+.avatar {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.avatar-initials {
+  user-select: none;
+}
+

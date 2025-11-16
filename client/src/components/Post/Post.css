@@ -5,7 +5,146 @@
     padding: 1rem;
     background-color: var(--cardColor);
     border-radius: 1rem;
-    gap: 1rem;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.postHeader {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.postHeader > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.postContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    word-wrap: break-word;
+}
+
+.postContent > span {
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.postContent .hashtag {
+    color: #87CEEB;
+    font-weight: 600;
+    background-color: rgba(135, 206, 235, 0.1);
+    padding: 2px 4px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.postContent .hashtag:hover {
+    background-color: rgba(135, 206, 235, 0.2);
+}
+
+.post-edit-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-edit-textarea {
+    background-color: var(--inputColor);
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #0096FF;
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.edit-privacy-selector {
+    margin-bottom: 0.5rem;
+}
+
+.edit-privacy-selector label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
+}
+
+.privacy-select {
+    padding: 0.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--inputColor);
+    background-color: var(--inputColor);
+    color: var(--textColor);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.privacy-select:focus {
+    outline: 2px solid #0096FF;
+    border-color: #0096FF;
+}
+
+.post-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.cancel-edit-btn,
+.save-edit-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.cancel-edit-btn {
+    background-color: var(--inputColor);
+    color: var(--textColor);
+}
+
+.cancel-edit-btn:hover:not(:disabled) {
+    background-color: var(--gray);
+}
+
+.save-edit-btn {
+    background-color: #0096FF;
+    color: white;
+}
+
+.save-edit-btn:hover:not(:disabled) {
+    background-color: #007acc;
+}
+
+.save-edit-btn:disabled,
+.cancel-edit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.edited-badge {
+    font-size: 12px;
+    color: var(--gray);
+    font-style: italic;
+    margin-left: 0.5rem;
 }
 
 .Post>img{
@@ -13,10 +152,327 @@
     max-height: 20rem;
     object-fit: cover;
     border-radius: 0.5rem;
+    margin-top: 0.5rem;
 }
 
 .postReact{
     display: flex;
     align-items: flex-start;
     gap: 1.5rem;
+    margin-top: 0.75rem;
+}
+
+.postReact img {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.postReact img:hover {
+    transform: scale(1.1);
+}
+
+/* Likes and Comments Count */
+.post-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 0.5rem;
+}
+
+.post-stats span {
+    color: var(--gray);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.post-stats span:hover {
+    color: var(--textColor);
+}
+
+/* Comments Section */
+.comments-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--inputColor);
+}
+
+.add-comment {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.comment-input-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.comment-textarea {
+    background-color: var(--inputColor);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    border: none;
+    outline: none;
+    resize: vertical;
+    min-height: 40px;
+    font-family: inherit;
+    width: 100%;
+}
+
+.comment-textarea:focus {
+    outline: 2px solid #0096FF;
+    outline-offset: -2px;
+}
+
+.comment-submit-btn {
+    align-self: flex-end;
+    padding: 6px 16px;
+    background-color: #0096FF;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.comment-submit-btn:hover:not(:disabled) {
+    background-color: #007acc;
+}
+
+.comment-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.comment-item {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.comment-item:hover {
+    background-color: var(--inputColor);
+}
+
+.comment-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.comment-author {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--textColor);
+}
+
+.comment-text {
+    font-size: 14px;
+    color: var(--textColor);
+    word-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.4;
+}
+
+.comment-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.25rem;
+}
+
+.comment-like {
+    font-size: 12px;
+    color: var(--gray);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: color 0.2s;
+}
+
+.comment-like:hover {
+    color: #0096FF;
+}
+
+/* Liked By Section */
+.liked-by-section {
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0;
+}
+
+.liked-by-text {
+    color: var(--textColor);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.liked-by-name {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.liked-by-others {
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    color: #0096FF;
+}
+
+.liked-by-others:hover {
+    text-decoration: underline;
+}
+
+/* Liked By Modal */
+.liked-by-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.liked-by-modal {
+    background-color: var(--cardColor);
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.liked-by-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid var(--inputColor);
+}
+
+.liked-by-modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: var(--textColor);
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: var(--inputColor);
+    color: var(--textColor);
+}
+
+.liked-by-modal-list {
+    overflow-y: auto;
+    max-height: calc(80vh - 80px);
+    padding: 0.5rem 0;
+}
+
+.liked-by-user-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: background-color 0.2s;
+}
+
+.liked-by-user-item:hover {
+    background-color: var(--inputColor);
+}
+
+.liked-by-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.liked-by-user-name {
+    font-weight: 600;
+    color: var(--textColor);
+    font-size: 14px;
+}
+
+.liked-by-username {
+    font-size: 12px;
+    color: var(--gray);
+}
+
+.loading-liked-by,
+.no-likes {
+    padding: 2rem;
+    text-align: center;
+    color: var(--gray);
+}
+
+/* Post Actions (Edit/Delete) */
+.post-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--inputColor);
+}
+
+.post-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 14px;
+    color: var(--textColor);
+    background-color: var(--inputColor);
+}
+
+.post-action-btn:hover {
+    background-color: var(--gray);
+}
+
+.post-action-btn.delete-btn {
+    color: #ff4444;
+}
+
+.post-action-btn.delete-btn:hover {
+    background-color: rgba(255, 68, 68, 0.1);
 }

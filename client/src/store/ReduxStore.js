@@ -19,7 +19,14 @@ function loadFromLocalStorage() {
   try {
       const serializedStore = window.localStorage.getItem('store');
       if(serializedStore === null) return undefined;
-      return JSON.parse(serializedStore);
+      const parsedStore = JSON.parse(serializedStore);
+      // Don't restore authData from localStorage - we'll fetch fresh data from server
+      // Also reset initializing to true so we check for token on app load
+      if (parsedStore && parsedStore.authReducer) {
+        parsedStore.authReducer.authData = null;
+        parsedStore.authReducer.initializing = true;
+      }
+      return parsedStore;
   } catch(e) {
       console.log(e);
       return undefined;
@@ -30,6 +37,17 @@ const persistedState = loadFromLocalStorage();
 
 const store = createStore(reducers, persistedState, composeEnhancers(applyMiddleware(thunk)));
 
-store.subscribe(() => saveToLocalStorage(store.getState()));
+store.subscribe(() => {
+  const state = store.getState();
+  // Don't persist authData to localStorage - only persist other state
+  const stateToSave = {
+    ...state,
+    authReducer: {
+      ...state.authReducer,
+      authData: null // Don't persist user data
+    }
+  };
+  saveToLocalStorage(stateToSave);
+});
 
 export default store;

@@ -5,8 +5,6 @@ const TrendCard = () => {
   return (
    <div className="TrendCard">
        <h3>Trending this week</h3>
-
-
        {TrendData.map((trend, id)=>{
             return(
                 <div className="trend" key={id}>
@@ -18,5 +16,4 @@ const TrendCard = () => {
    </div>
   )
 }
-
 export default TrendCard

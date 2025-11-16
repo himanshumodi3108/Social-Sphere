@@ -3,7 +3,6 @@ import "./Auth.css";
 import { logIn, signUp } from "../../actions/AuthActions.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-
 const Auth = () => {
   const initialState = {
     firstname: "",
@@ -13,30 +12,18 @@ const Auth = () => {
     confirmpass: "",
   };
   const loading = useSelector((state) => state.authReducer.loading);
-  
-
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isSignUp, setIsSignUp] = useState(false);
-
   const [data, setData] = useState(initialState);
-
   const [confirmPass, setConfirmPass] = useState(true);
-
-  // const dispatch = useDispatch()
-
-  // Reset Form
   const resetForm = () => {
     setData(initialState);
     setConfirmPass(confirmPass);
   };
-
-  // handle Change in input
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
-
-  // Form Submission
   const handleSubmit = async (e) => {
     setConfirmPass(true);
     e.preventDefault();
@@ -51,13 +38,9 @@ const Auth = () => {
       }
     }
   };
-
   return (
-
     <div className="Auth">
-   
     <h1 style={{fontFamily:"cursive",color:"#0096FF", textAlign:"center" }}>SocialSphere</h1>
-
       <div className="a-right">
         <form className="infoForm authForm" onSubmit={handleSubmit} >
           <h2>{isSignUp ? "Register" : "Login"}</h2>
@@ -74,9 +57,7 @@ const Auth = () => {
                 onChange={handleChange}
               />
               </div>
-              
               <div>
-              
               <input
                 required
                 type="text"
@@ -89,7 +70,6 @@ const Auth = () => {
               </div>
             </div>
           )}
-
           <div>
             <input
               required
@@ -122,7 +102,6 @@ const Auth = () => {
               />
             )}
           </div>
-
           <span
             style={{
               color: "red",
@@ -163,5 +142,4 @@ const Auth = () => {
     </div>
   );
 };
-
 export default Auth;

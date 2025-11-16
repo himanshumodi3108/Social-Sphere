@@ -2,39 +2,58 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getUser } from "../../api/UserRequests";
+import Avatar from "../Avatar/Avatar";
+
 const Conversation = ({ data, currentUser, online }) => {
 
   const [userData, setUserData] = useState(null)
   const dispatch = useDispatch()
 
   useEffect(()=> {
-
-    const userId = data.members.find((id)=>id!==currentUser)
+    // Find the other user in the conversation (not the current user)
+    // Handle both ObjectId and string formats
+    const userId = data.members.find((id) => {
+      const idStr = String(id);
+      const currentUserStr = String(currentUser);
+      return idStr !== currentUserStr;
+    });
+    
     const getUserData = async ()=> {
-      try
-      {
-          const {data} =await getUser(userId)
-         setUserData(data)
-         dispatch({type:"SAVE_USER", data:data})
+      if (!userId) {
+        console.error("Could not find other user in conversation");
+        return;
       }
-      catch(error)
-      {
-        console.log(error)
+      
+      try {
+        const response = await getUser(userId);
+        const userData = response?.data || response;
+        if (userData) {
+          setUserData(userData);
+          dispatch({type:"SAVE_USER", data: userData});
+        } else {
+          console.error("No user data received for userId:", userId);
+        }
+      }
+      catch(error) {
+        console.error("Error fetching user data in Conversation:", error);
       }
     }
 
     getUserData();
-  }, [])
+  }, [data.members, currentUser])
   return (
     <>
       <div className="follower conversation">
         <div>
           {online && <div className="online-dot"></div>}
-          <img
-            src={userData?.profilePicture? process.env.REACT_APP_PUBLIC_FOLDER + userData.profilePicture : process.env.REACT_APP_PUBLIC_FOLDER + "defaultProfile.png"}
-            alt="Profile"
+          <Avatar
+            user={userData}
+            profilePicture={userData?.profilePicture}
+            firstname={userData?.firstname}
+            lastname={userData?.lastname}
+            username={userData?.username}
+            size="50px"
             className="followerImage"
-            style={{ width: "50px", height: "50px" }}
           />
           <div className="name" style={{fontSize: '0.8rem'}}>
             <span>{userData?.firstname} {userData?.lastname}</span>

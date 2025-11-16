@@ -1,0 +1,194 @@
+.Groups {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.Groups-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.Groups-header h2 {
+  margin: 0;
+}
+
+.create-group-btn {
+  padding: 0.75rem 1.5rem;
+  background-color: #0096FF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.create-group-btn:hover {
+  background-color: #007acc;
+}
+
+.Groups-search {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.Groups-search input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--inputColor);
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+.Groups-search button {
+  padding: 0.75rem 1.5rem;
+  background-color: var(--inputColor);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.Groups-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.Group-card {
+  background-color: var(--cardColor);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.group-cover {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+}
+
+.group-content {
+  padding: 1rem;
+}
+
+.group-content h3 {
+  margin: 0.5rem 0;
+}
+
+.group-content p {
+  color: var(--gray);
+  margin: 0.5rem 0;
+}
+
+.group-stats {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  font-size: 14px;
+  color: var(--gray);
+}
+
+.join-btn, .leave-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.join-btn {
+  background-color: #0096FF;
+  color: white;
+}
+
+.join-btn:hover {
+  background-color: #007acc;
+}
+
+.leave-btn {
+  background-color: var(--inputColor);
+  color: var(--textColor);
+}
+
+.leave-btn:hover {
+  background-color: var(--gray);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: var(--cardColor);
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  padding: 0.75rem;
+  border: 1px solid var(--inputColor);
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.modal-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.modal-actions button[type="button"] {
+  background-color: var(--inputColor);
+  color: var(--textColor);
+}
+
+.modal-actions button[type="submit"] {
+  background-color: #0096FF;
+  color: white;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--gray);
+}
+

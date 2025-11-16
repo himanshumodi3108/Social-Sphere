@@ -23,9 +23,10 @@
   width: 90%;
   
 }
-.ProfileImages > img:nth-of-type(2) {
+.ProfileImages > img:nth-of-type(2),
+.ProfileImages > .profile-avatar {
   width: 7rem;
-  height: 9rem;
+  height: 7rem;
   border-radius: 50%;
   position: absolute;
   bottom: -3rem;

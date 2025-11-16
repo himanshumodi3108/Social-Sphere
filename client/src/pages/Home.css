@@ -8,6 +8,15 @@
   overflow-y: auto;
 }
 
+.home-center {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
 /* ProfileSide - Always Visible in Desktop */
 .ProfileSide {
   display: block;

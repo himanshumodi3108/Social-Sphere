@@ -25,5 +25,6 @@ export const signUp = (formData, navigate) => async (dispatch) => {
 
 
 export const logout = ()=> async(dispatch)=> {
-  dispatch({type: "LOG_OUT"})
+  dispatch({type: "LOG_OUT"});
+  window.location.href = "/landing";
 }

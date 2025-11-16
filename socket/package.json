@@ -1,9 +1,11 @@
 {
+  "type": "module",
   "scripts": {
     "start": "nodemon index.js",
     "build": "npm i"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
     "nodemon": "^2.0.22",
     "socket.io": "^4.7.5"
   }

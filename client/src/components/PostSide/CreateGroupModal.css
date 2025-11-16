@@ -1,0 +1,85 @@
+.create-group-container {
+  padding: 1.5rem;
+  background-color: var(--cardColor);
+  border-radius: 1rem;
+}
+
+.create-group-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: var(--textColor);
+  font-size: 14px;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 1px solid var(--inputColor);
+  background-color: var(--inputColor);
+  color: var(--textColor);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  border-color: #0096FF;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.cancel-btn,
+.create-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-btn {
+  background-color: var(--inputColor);
+  color: var(--textColor);
+}
+
+.cancel-btn:hover {
+  background-color: var(--gray);
+}
+
+.create-btn {
+  background-color: #0096FF;
+  color: white;
+}
+
+.create-btn:hover {
+  background-color: #007acc;
+}
+

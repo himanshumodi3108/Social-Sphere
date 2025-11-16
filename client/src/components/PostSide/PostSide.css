@@ -5,6 +5,47 @@
     gap: 1rem;
     height: 95.5vh;
     overflow: auto;
+    width: 100%;
+}
+
+.postside-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--cardColor);
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.postside-header h2 {
+    margin: 0;
+    color: var(--textColor);
+    font-size: 1.5rem;
+    flex: 1;
+    min-width: 0;
+    padding-right: 1rem;
+}
+
+.postside-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray);
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.postside-header .close-btn:hover {
+    background-color: var(--inputColor);
+    color: var(--textColor);
 }
 
 .mobile-only {

@@ -143,9 +143,71 @@ const ProfileModal = ({ modalOpened, setModalOpened, data }) => {
           <input type="file" name="coverImage" onChange={onImageChange} />
         </div>
 
-        <button className="button infoButton" type="submit" style={{background:"#0096FF"}}>
-          Update
-        </button>
+        {/* Privacy Settings */}
+        <div className="privacy-section">
+          <h4>Privacy Settings</h4>
+          
+          <div className="privacy-item">
+            <label>
+              <b>Profile Privacy</b>
+              <select
+                name="privacy.profile"
+                value={formData.privacy?.profile || 'public'}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    privacy: {
+                      ...formData.privacy,
+                      profile: e.target.value
+                    }
+                  });
+                }}
+                className="infoInput"
+              >
+                <option value="public">Public - Anyone can view your profile</option>
+                <option value="friends">Friends - Only your followers can view</option>
+                <option value="private">Private - Only you can view</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="privacy-item">
+            <label>
+              <b>Default Post Privacy</b>
+              <select
+                name="privacy.posts"
+                value={formData.privacy?.posts || 'public'}
+                onChange={(e) => {
+                  setFormData({
+                    ...formData,
+                    privacy: {
+                      ...formData.privacy,
+                      posts: e.target.value
+                    }
+                  });
+                }}
+                className="infoInput"
+              >
+                <option value="public">Public - Anyone can see your posts</option>
+                <option value="friends">Friends - Only your followers can see</option>
+                <option value="private">Private - Only you can see</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+            <div style={{ display: "flex", gap: "0.75rem", width: "100%", justifyContent: "flex-end", marginTop: "1rem" }}>
+              <a
+                href="/privacy-settings"
+                className="infoButton"
+                style={{background:"var(--gray)", textDecoration: "none"}}
+              >
+                Privacy Settings
+              </a>
+              <button className="infoButton" type="submit" style={{background:"#0096FF"}}>
+                Update
+              </button>
+            </div>
       </form>
     </Modal>
   );

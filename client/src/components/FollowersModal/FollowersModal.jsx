@@ -3,9 +3,11 @@ import { Modal } from "@mantine/core";
 import User from "../User/User"; // Import User component
 import { getAllUser } from "../../api/UserRequests"; // Fetch users separately
 import "./FollowersModal.css"; // Import modal-specific styles
+import { useSelector } from "react-redux";
 
 const FollowersModal = ({ modalOpened, setModalOpened }) => {
   const [modalPersons, setModalPersons] = useState([]);
+  const { user } = useSelector((state) => state.authReducer.authData);
 
   useEffect(() => {
     const fetchPersons = async () => {
@@ -20,7 +22,7 @@ const FollowersModal = ({ modalOpened, setModalOpened }) => {
     if (modalOpened) {
       fetchPersons(); // Fetch new data when modal opens
     }
-  }, [modalOpened]);
+  }, [modalOpened, user?.following]); // Also refresh when following list changes
 
   return (
     <Modal

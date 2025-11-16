@@ -1,21 +1,15 @@
 import React, { useState } from "react";
 import "./RightSide.css";
-
 import TrendCard from "../TrendCard/TrendCard";
 import ShareModal from "../ShareModal/ShareModal";
 import NavIcons from "../NavIcons/NavIcons";
-
 const RightSide = () => {
   const [modalOpened, setModalOpened] = useState(false);
-
   return (
     <div className="RightSide">
-      {/* Side Navbar - Always Visible */}
-      <NavIcons />
-  
-    
 
-      {/* Hide TrendCard and Share Button in Mobile View */}
+      <NavIcons />
+
       <div className="hide-in-mobile">
         <TrendCard />
         <br />
@@ -27,5 +21,4 @@ const RightSide = () => {
     </div>
   );
 };
-
 export default RightSide;

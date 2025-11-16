@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-
 const ChatSchema = new mongoose.Schema(
   {
     members: [
@@ -14,9 +13,6 @@ const ChatSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
-
-// Add indexing for faster queries
 ChatSchema.index({ members: 1 });
-
 const ChatModel = mongoose.model("Chat", ChatSchema);
 export default ChatModel;

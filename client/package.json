@@ -2,7 +2,7 @@
   "name": "starter",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://socialsphere1-4z6x.onrender.com",
+  "proxy": "http://localhost:5000",
   "dependencies": {
     "@iconscout/react-unicons": "^1.1.6",
     "@mantine/core": "^4.2.1",
@@ -11,6 +11,7 @@
     "@testing-library/react": "^12.0.0",
     "@testing-library/user-event": "^13.2.1",
     "axios": "^0.27.2",
+    "caniuse-lite": "^1.0.30001755",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-file-base64": "^1.0.3",
@@ -24,6 +25,7 @@
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.4.1",
     "socket.io-client": "^4.7.5",
+    "sonner": "^2.0.7",
     "timeago.js": "^4.0.2",
     "web-vitals": "^2.1.0"
   },
