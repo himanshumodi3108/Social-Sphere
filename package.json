@@ -12,10 +12,6 @@
     "start-server": "cd server && node index.js",
     "start-socket": "cd socket && npm start",
     "start-client": "cd client && npm start",
-    "validate-env": "node validate-env.js",
-    "generate-jwt": "node generate-jwt-key.js",
-    "test-db": "cd server && node test-db-connection.js",
-    "cleanup-followers": "cd server && node cleanup-followers.js",
     "build": "npm run install-all"
   },
   "author": "",
