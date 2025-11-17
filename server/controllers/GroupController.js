@@ -88,11 +88,13 @@ export const getGroups = async (req, res) => {
       .limit(limit)
       .lean();
 
-    // Populate creator info
+    // Populate creator info - optimized with single query
     const creatorIds = [...new Set(groups.map(g => String(g.createdBy)))];
-    const creators = await UserModel.find({ _id: { $in: creatorIds } })
-      .select('firstname lastname username profilePicture')
-      .lean();
+    const creators = creatorIds.length > 0 
+      ? await UserModel.find({ _id: { $in: creatorIds } })
+          .select('firstname lastname username profilePicture')
+          .lean()
+      : [];
 
     const creatorMap = {};
     creators.forEach(creator => {
@@ -104,12 +106,16 @@ export const getGroups = async (req, res) => {
       };
     });
 
-    const groupsWithCreator = groups.map(group => ({
-      ...group,
-      creator: creatorMap[String(group.createdBy)],
-      memberCount: group.members ? group.members.length : 0,
-      isMember: userId ? group.members?.some(m => String(m.userId) === String(userId)) : false,
-    }));
+    const groupsWithCreator = groups.map(group => {
+      const isCreator = userId && String(group.createdBy) === String(userId);
+      const isMember = userId ? group.members?.some(m => String(m.userId) === String(userId)) : false;
+      return {
+        ...group,
+        creator: creatorMap[String(group.createdBy)],
+        memberCount: group.members ? group.members.length : 0,
+        isMember: isCreator || isMember, // Creator is always considered a member
+      };
+    });
 
     logger.info("Groups fetched", { count: groupsWithCreator.length, page, limit, total });
 
@@ -141,15 +147,20 @@ export const getGroup = async (req, res) => {
       }
     }
 
-    // Populate creator and members
-    const creator = await UserModel.findById(group.createdBy)
-      .select('firstname lastname username profilePicture')
-      .lean();
-
+    // Populate creator and members - optimized with parallel queries
     const memberIds = group.members?.map(m => m.userId) || [];
-    const members = await UserModel.find({ _id: { $in: memberIds } })
-      .select('firstname lastname username profilePicture')
-      .lean();
+    
+    // Fetch creator and members in parallel for better performance
+    const [creator, members] = await Promise.all([
+      UserModel.findById(group.createdBy)
+        .select('firstname lastname username profilePicture')
+        .lean(),
+      memberIds.length > 0 
+        ? UserModel.find({ _id: { $in: memberIds } })
+            .select('firstname lastname username profilePicture')
+            .lean()
+        : Promise.resolve([])
+    ]);
 
     const memberMap = {};
     members.forEach(member => {
@@ -240,14 +251,17 @@ export const deleteGroup = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // Only creator can delete
-    if (String(group.createdBy) !== String(userId)) {
-      return res.status(403).json({ message: "Only the creator can delete the group" });
+    const isCreator = String(group.createdBy) === String(userId);
+    const isAdmin = group.members?.some(m => String(m.userId) === String(userId) && m.role === 'admin');
+
+    // Creator or admin can delete
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ message: "Only the creator or admins can delete the group" });
     }
 
     await GroupModel.findByIdAndDelete(groupId);
 
-    logger.info("Group deleted", { groupId, userId });
+    logger.info("Group deleted", { groupId, userId, deletedBy: isCreator ? 'creator' : 'admin' });
 
     res.status(200).json({ message: "Group deleted successfully" });
   } catch (error) {
@@ -269,6 +283,11 @@ export const joinGroup = async (req, res) => {
     const group = await GroupModel.findById(groupId);
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if user is the creator
+    if (String(group.createdBy) === String(userId)) {
+      return res.status(400).json({ message: "You are the creator of this group. You are already a member." });
     }
 
     // Check if already a member
@@ -312,9 +331,49 @@ export const leaveGroup = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // Creator cannot leave
-    if (String(group.createdBy) === String(userId)) {
-      return res.status(400).json({ message: "Creator cannot leave the group. Delete the group instead." });
+    // Check if user is a member
+    const userMember = group.members?.find(m => String(m.userId) === String(userId));
+    if (!userMember) {
+      return res.status(400).json({ message: "You are not a member of this group" });
+    }
+
+    const isCreator = String(group.createdBy) === String(userId);
+    const isAdmin = userMember.role === 'admin';
+    
+    // Count admins
+    const adminCount = group.members?.filter(m => m.role === 'admin').length || 0;
+    const totalMembers = group.members?.length || 0;
+
+    // If creator is the only member, allow leaving (they can delete the group)
+    if (isCreator && totalMembers === 1) {
+      // Remove member (creator)
+      await group.updateOne({
+        $pull: {
+          members: { userId: userId },
+        },
+      });
+
+      logger.info("Creator left group (only member)", { groupId, userId });
+      return res.status(200).json({ 
+        message: "Successfully left the group. You can now delete the group if you wish.",
+        canDelete: true 
+      });
+    }
+
+    // If user is the only admin, they must promote another member first
+    if (isAdmin && adminCount === 1 && totalMembers > 1) {
+      return res.status(400).json({ 
+        message: "You are the only admin. Please promote another member to admin before leaving.",
+        requiresAdminPromotion: true 
+      });
+    }
+
+    // If creator wants to leave and there are other members, they must delete the group
+    if (isCreator && totalMembers > 1) {
+      return res.status(400).json({ 
+        message: "As the creator, you cannot leave the group while there are other members. Delete the group instead.",
+        mustDelete: true 
+      });
     }
 
     // Remove member
@@ -374,6 +433,189 @@ export const inviteToGroup = async (req, res) => {
   } catch (error) {
     logger.error("Error inviting to group", { error: error.message, groupId: req.params.id });
     res.status(500).json({ message: error.message || "Failed to send invitation" });
+  }
+};
+
+// Remove member from group (admin only)
+export const removeMember = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.userId;
+    const { memberUserId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User ID not found" });
+    }
+
+    if (!memberUserId) {
+      return res.status(400).json({ message: "Member user ID is required" });
+    }
+
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if user is admin or creator
+    const isAdmin = group.members?.some(m => String(m.userId) === String(userId) && m.role === 'admin');
+    const isCreator = String(group.createdBy) === String(userId);
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ message: "Only admins can remove members" });
+    }
+
+    // Cannot remove creator
+    if (String(group.createdBy) === String(memberUserId)) {
+      return res.status(400).json({ message: "Cannot remove the group creator" });
+    }
+
+    // Cannot remove yourself
+    if (String(userId) === String(memberUserId)) {
+      return res.status(400).json({ message: "Cannot remove yourself. Leave the group instead." });
+    }
+
+    // Check if member exists
+    const memberExists = group.members?.some(m => String(m.userId) === String(memberUserId));
+    if (!memberExists) {
+      return res.status(400).json({ message: "User is not a member of this group" });
+    }
+
+    // Remove member
+    await group.updateOne({
+      $pull: {
+        members: { userId: memberUserId },
+      },
+    });
+
+    logger.info("Member removed from group", { groupId, removedBy: userId, removedUser: memberUserId });
+
+    res.status(200).json({ message: "Member removed successfully" });
+  } catch (error) {
+    logger.error("Error removing member", { error: error.message, groupId: req.params.id });
+    res.status(500).json({ message: error.message || "Failed to remove member" });
+  }
+};
+
+// Make member admin (creator/admin only)
+export const makeMemberAdmin = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.userId;
+    const { memberUserId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User ID not found" });
+    }
+
+    if (!memberUserId) {
+      return res.status(400).json({ message: "Member user ID is required" });
+    }
+
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if user is admin or creator
+    const isAdmin = group.members?.some(m => String(m.userId) === String(userId) && m.role === 'admin');
+    const isCreator = String(group.createdBy) === String(userId);
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ message: "Only admins can promote members" });
+    }
+
+    // Check if member exists
+    const memberExists = group.members?.some(m => String(m.userId) === String(memberUserId));
+    if (!memberExists) {
+      return res.status(400).json({ message: "User is not a member of this group" });
+    }
+
+    // Check if already admin
+    const member = group.members.find(m => String(m.userId) === String(memberUserId));
+    if (member.role === 'admin') {
+      return res.status(400).json({ message: "User is already an admin" });
+    }
+
+    // Update member role to admin
+    await group.updateOne({
+      $set: {
+        'members.$[elem].role': 'admin',
+      },
+    }, {
+      arrayFilters: [{ 'elem.userId': memberUserId }],
+    });
+
+    logger.info("Member promoted to admin", { groupId, promotedBy: userId, promotedUser: memberUserId });
+
+    res.status(200).json({ message: "Member promoted to admin successfully" });
+  } catch (error) {
+    logger.error("Error promoting member", { error: error.message, groupId: req.params.id });
+    res.status(500).json({ message: error.message || "Failed to promote member" });
+  }
+};
+
+// Add member directly (admin only)
+export const addMember = async (req, res) => {
+  try {
+    const groupId = req.params.id;
+    const userId = req.userId;
+    const { memberUserId } = req.body;
+
+    logger.info("Add member request received", { groupId, userId, memberUserId, body: req.body });
+
+    if (!userId) {
+      return res.status(401).json({ message: "User ID not found" });
+    }
+
+    if (!memberUserId) {
+      return res.status(400).json({ message: "Member user ID is required" });
+    }
+
+    const group = await GroupModel.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if user is admin or creator
+    const isAdmin = group.members?.some(m => String(m.userId) === String(userId) && m.role === 'admin');
+    const isCreator = String(group.createdBy) === String(userId);
+
+    if (!isAdmin && !isCreator) {
+      return res.status(403).json({ message: "Only admins can add members" });
+    }
+
+    // Check if user exists
+    const userToAdd = await UserModel.findById(memberUserId);
+    if (!userToAdd) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if already a member
+    const isMember = group.members?.some(m => String(m.userId) === String(memberUserId));
+    if (isMember) {
+      return res.status(400).json({ message: "User is already a member of this group" });
+    }
+
+    // Add member
+    await group.updateOne({
+      $push: {
+        members: {
+          userId: memberUserId,
+          role: 'member',
+          joinedAt: new Date(),
+        },
+      },
+    });
+
+    // Create notification
+    await createNotification(memberUserId, 'group_invite', userId, { groupId });
+
+    logger.info("Member added to group", { groupId, addedBy: userId, addedUser: memberUserId });
+
+    res.status(200).json({ message: "Member added successfully" });
+  } catch (error) {
+    logger.error("Error adding member", { error: error.message, groupId: req.params.id });
+    res.status(500).json({ message: error.message || "Failed to add member" });
   }
 };
 

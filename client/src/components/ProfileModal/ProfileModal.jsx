@@ -42,7 +42,7 @@ const ProfileModal = ({ modalOpened, setModalOpened, data }) => {
       try {
         dispatch(uploadImage(data));
       } catch (err) {
-        console.log(err);
+        // console.log(err);
       }
     }
     if (coverImage) {
@@ -54,7 +54,7 @@ const ProfileModal = ({ modalOpened, setModalOpened, data }) => {
       try {
         dispatch(uploadImage(data));
       } catch (err) {
-        console.log(err);
+        // console.log(err);
       }
     }
     dispatch(updateUser(param.id, UserData));

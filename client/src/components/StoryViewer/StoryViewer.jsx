@@ -49,7 +49,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
       try {
         await viewStory(currentStory._id);
       } catch (error) {
-        console.error("Error marking story as viewed:", error);
+        // console.error("Error marking story as viewed:", error);
       }
     };
     markAsViewed();
@@ -166,7 +166,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
     try {
       await reactToStory(currentStory._id, user._id);
     } catch (error) {
-      console.error("Error reacting to story:", error);
+      // console.error("Error reacting to story:", error);
       // Revert optimistic update
       setLiked(wasLiked);
       setReactions(reactions);
@@ -259,7 +259,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
               alt="Story"
               className="story-image"
               onError={(e) => {
-                console.error("Error loading story image:", currentStory.image);
+                // console.error("Error loading story image:", currentStory.image);
                 const basePath = process.env.REACT_APP_PUBLIC_FOLDER || 'http://localhost:5000/images/';
                 
                 // Try sanitized filename (spaces replaced with underscores)
@@ -268,7 +268,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
                 
                 // If current src doesn't match sanitized, try it
                 if (e.target.src !== sanitizedPath) {
-                  console.log("Trying sanitized filename:", sanitizedPath);
+                  // console.log("Trying sanitized filename:", sanitizedPath);
                   e.target.src = sanitizedPath;
                   return; // Let the image try to load with sanitized name
                 }
@@ -283,7 +283,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
                 e.target.style.display = 'none';
               }}
               onLoad={(e) => {
-                console.log("Story image loaded successfully:", currentStory.image);
+                // console.log("Story image loaded successfully:", currentStory.image);
                 // Remove any error messages
                 const errorDiv = e.target.parentElement.querySelector('.story-error');
                 if (errorDiv) {

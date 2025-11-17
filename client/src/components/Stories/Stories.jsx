@@ -31,7 +31,7 @@ const Stories = () => {
       const { data } = await getTimelineStories();
       setStories(data || []);
     } catch (error) {
-      console.error("Error fetching stories:", error);
+      // console.error("Error fetching stories:", error);
     } finally {
       setLoading(false);
     }
@@ -78,7 +78,7 @@ const Stories = () => {
       setStoryText("");
       fetchStories();
     } catch (error) {
-      console.error("Error creating story:", error);
+      // console.error("Error creating story:", error);
       alert("Failed to create story. Please try again.");
     } finally {
       setUploading(false);
@@ -93,7 +93,7 @@ const Stories = () => {
       await deleteStory(storyId);
       fetchStories();
     } catch (error) {
-      console.error("Error deleting story:", error);
+      // console.error("Error deleting story:", error);
       alert("Failed to delete story. Please try again.");
     }
   };

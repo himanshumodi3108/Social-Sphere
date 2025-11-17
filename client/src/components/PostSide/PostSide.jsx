@@ -62,7 +62,7 @@ const PostSide = () => {
       setShowCreateGroup(false);
       window.dispatchEvent(new Event('group-created'));
     } catch (error) {
-      console.error("Error creating group:", error);
+      // console.error("Error creating group:", error);
       alert("Failed to create group");
     }
   };

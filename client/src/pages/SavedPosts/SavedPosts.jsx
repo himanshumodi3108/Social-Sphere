@@ -28,7 +28,7 @@ const SavedPosts = () => {
       }
       setHasMore(data.pagination?.hasNext || false);
     } catch (error) {
-      console.error("Error fetching saved posts:", error);
+      // console.error("Error fetching saved posts:", error);
     } finally {
       setLoading(false);
     }

@@ -84,8 +84,13 @@ app.use('/images', express.static('public/images'));
 app.use((req, res, next) => {
   logger.info(`${req.method} ${req.path}`, {
     ip: req.ip,
-    userAgent: req.get('user-agent')
+    userAgent: req.get('user-agent'),
+    originalUrl: req.originalUrl
   });
+  // Log group routes specifically
+  // if (req.path.startsWith('/groups/')) {
+  //   console.log(`[GROUP ROUTE] ${req.method} ${req.path}`, req.params);
+  // }
   next();
 });
 
@@ -122,7 +127,7 @@ const PORT = process.env.PORT || 5000;
 const CONNECTION = process.env.MONGO_URI;
 
 if (!CONNECTION) {
-  console.error("❌ ERROR: MONGO_URI is not set in .env file!");
+  // console.error("❌ ERROR: MONGO_URI is not set in .env file!");
   process.exit(1);
 }
 
@@ -132,8 +137,8 @@ let connectionString = CONNECTION;
 const hasDbName = /mongodb\+?srv?:\/\/[^/]+\/[^/?]+/.test(CONNECTION);
 
 if (!hasDbName) {
-  console.warn("⚠️  WARNING: No database name in connection string.");
-  console.warn("📝 Adding 'socialsphere' as database name...");
+  // console.warn("⚠️  WARNING: No database name in connection string.");
+  // console.warn("📝 Adding 'socialsphere' as database name...");
   
   // Properly insert database name before query parameters
   if (CONNECTION.includes('?')) {
@@ -153,12 +158,12 @@ if (!hasDbName) {
   }
   
   // Mask credentials in log
-  const maskedConnection = connectionString.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
-  console.log("📝 Using connection:", maskedConnection);
+  // const maskedConnection = connectionString.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
+  // console.log("📝 Using connection:", maskedConnection);
 } else {
   // Mask credentials in log
-  const maskedConnection = CONNECTION.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
-  console.log("📝 Connecting to:", maskedConnection);
+  // const maskedConnection = CONNECTION.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
+  // console.log("📝 Connecting to:", maskedConnection);
 }
 
 // Connect to MongoDB

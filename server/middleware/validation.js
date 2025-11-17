@@ -122,11 +122,23 @@ export const validateSearch = [
   handleValidationErrors
 ];
 
-// ID parameter validation
+// ID parameter validation - flexible to handle both ObjectId and string IDs
 export const validateId = [
   param('id')
     .notEmpty()
-    .withMessage('ID parameter is required'),
+    .withMessage('ID parameter is required')
+    .custom((value) => {
+      // Allow MongoDB ObjectId format or any non-empty string
+      // MongoDB ObjectId is 24 hex characters
+      if (typeof value !== 'string' || value.trim().length === 0) {
+        throw new Error('ID must be a non-empty string');
+      }
+      // Log validation for debugging
+      // console.log('[validateId] Validating ID:', value);
+      // Optional: validate MongoDB ObjectId format (24 hex chars)
+      // But don't fail if it's not - let the controller handle it
+      return true;
+    }),
   handleValidationErrors
 ];
 

@@ -15,7 +15,7 @@ const FollowersModal = ({ modalOpened, setModalOpened }) => {
         const { data } = await getAllUser();
         setModalPersons(data);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        // console.error("Error fetching users:", error);
       }
     };
 

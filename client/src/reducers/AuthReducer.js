@@ -54,11 +54,11 @@ const authReducer = (state = { authData: null, loading: false, error: false, upd
           }
         };
         
-        console.log("UPDATING_SUCCESS - Cleaned data:", {
-          userId: cleanedUpdateData.user._id,
-          following: cleanedFollowing,
-          followers: cleanedFollowers
-        });
+        // console.log("UPDATING_SUCCESS - Cleaned data:", {
+        //   userId: cleanedUpdateData.user._id,
+        //   following: cleanedFollowing,
+        //   followers: cleanedFollowers
+        // });
       }
       // Only store the token in localStorage, not the full user data
       if (cleanedUpdateData?.token) {

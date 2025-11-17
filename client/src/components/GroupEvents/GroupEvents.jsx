@@ -31,8 +31,13 @@ const GroupEvents = ({ groupId, isMember, isAdmin }) => {
       const eventsArray = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
       setEvents(eventsArray);
     } catch (error) {
-      console.error("Error fetching events:", error);
-      setEvents([]);
+      // console.error("Error fetching events:", error);
+      // If 404 or 501, events feature is not implemented yet - show empty state
+      if (error.response?.status === 404 || error.response?.status === 501) {
+        setEvents([]);
+      } else {
+        setEvents([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -53,7 +58,7 @@ const GroupEvents = ({ groupId, isMember, isAdmin }) => {
       setNewEvent({ title: "", description: "", date: "", time: "", location: "" });
       fetchEvents();
     } catch (error) {
-      console.error("Error creating event:", error);
+      // console.error("Error creating event:", error);
       alert("Failed to create event. Please try again.");
     }
   };
@@ -64,7 +69,7 @@ const GroupEvents = ({ groupId, isMember, isAdmin }) => {
       await rsvpToEvent(groupId, eventId, newRSVP);
       fetchEvents();
     } catch (error) {
-      console.error("Error updating RSVP:", error);
+      // console.error("Error updating RSVP:", error);
       alert("Failed to update RSVP. Please try again.");
     }
   };

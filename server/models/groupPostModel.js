@@ -24,6 +24,15 @@ const groupPostSchema = mongoose.Schema(
       maxlength: 2000,
     },
     image: String,
+    video: String,
+    location: {
+      name: String,
+      coordinates: {
+        lat: Number,
+        lng: Number
+      }
+    },
+    scheduledAt: Date,
     likes: {
       type: Array,
       default: [],

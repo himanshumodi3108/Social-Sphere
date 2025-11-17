@@ -25,7 +25,7 @@ const ProfileCard = ({location}) => {
           const userData = response?.data || response;
           setProfileUser(userData);
         } catch (error) {
-          console.error("Error fetching profile user:", error);
+          // console.error("Error fetching profile user:", error);
         }
       }
     };
@@ -49,7 +49,7 @@ const ProfileCard = ({location}) => {
           const userData = response?.data || response;
           setProfileUser(userData);
         } catch (error) {
-          console.error("Error refreshing profile user:", error);
+          // console.error("Error refreshing profile user:", error);
         }
       };
       
@@ -86,7 +86,7 @@ const ProfileCard = ({location}) => {
           setProfileUser(userData);
         }
       } catch (error) {
-        console.error("Error refreshing profile user:", error);
+        // console.error("Error refreshing profile user:", error);
       }
     };
     

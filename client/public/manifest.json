@@ -1,0 +1,37 @@
+{
+  "short_name": "SocialSphere",
+  "name": "SocialSphere - Connect, Share, and Engage",
+  "description": "A modern social media platform for connecting with friends, sharing posts, joining groups, and building communities.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0096FF",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["social", "lifestyle", "entertainment"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Groups",
+      "short_name": "Groups",
+      "description": "View and join groups",
+      "url": "/groups",
+      "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
+    },
+    {
+      "name": "Chat",
+      "short_name": "Chat",
+      "description": "Open chat",
+      "url": "/chat",
+      "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
+    }
+  ]
+}
+

@@ -9,7 +9,7 @@ import { likePost, deletePost, addComment, likeComment, updatePost, savePost } f
 import { useSelector, useDispatch } from "react-redux";
 import Avatar from "../Avatar/Avatar";
 import * as UserApi from "../../api/UserRequests";
-import { UilEdit, UilBookmark, UilBookmarkFull } from "@iconscout/react-unicons";
+import { UilEdit, UilBookmark, UilBookmarkFull, UilLocationPoint } from "@iconscout/react-unicons";
 
 const Post = ({ data }) => {
   const dispatch = useDispatch();
@@ -66,14 +66,14 @@ const Post = ({ data }) => {
               const userData = response?.data || response;
               return userData;
             } catch (error) {
-              console.error(`Error fetching user ${likeId}:`, error);
+              // console.error(`Error fetching user ${likeId}:`, error);
               return null;
             }
           });
           const users = await Promise.all(userPromises);
           setLikedByUsers(users.filter(u => u !== null));
         } catch (error) {
-          console.error("Error fetching liked by users:", error);
+          // console.error("Error fetching liked by users:", error);
         }
       } else {
         setLikedByUsers([]);
@@ -127,7 +127,7 @@ const Post = ({ data }) => {
             });
           }
         } catch (error) {
-          console.error("Error fetching author data for post:", error);
+          // console.error("Error fetching author data for post:", error);
         }
       }
     };
@@ -169,7 +169,7 @@ const Post = ({ data }) => {
       await likePost(data._id, user._id);
     } catch (error) {
       // Revert optimistic update on error
-      console.error("Error liking post:", error);
+      // console.error("Error liking post:", error);
       setLiked(wasLiked);
       setLikes(currentLikesArray.length);
       
@@ -185,12 +185,12 @@ const Post = ({ data }) => {
   const handleDelete = async (postId) => {
     try {
       await deletePost(postId, { userId: user._id });
-      console.log("Post deleted successfully.");
+      // console.log("Post deleted successfully.");
       window.alert("Post deleted successfully.");
       window.location.reload();
       // Add any additional logic or state updates after a successful deletion
     } catch (error) {
-      console.error("Error deleting post:", error);
+      // console.error("Error deleting post:", error);
       // Handle errors appropriately
       // For example, you might want to show an error message to the user
     }
@@ -212,7 +212,7 @@ const Post = ({ data }) => {
         comments: [...comments, newComment]
       });
     } catch (error) {
-      console.error("Error adding comment:", error);
+      // console.error("Error adding comment:", error);
       alert("Failed to add comment. Please try again.");
     } finally {
       setCommenting(false);
@@ -247,7 +247,7 @@ const Post = ({ data }) => {
         comments: updatedComments
       });
     } catch (error) {
-      console.error("Error liking comment:", error);
+      // console.error("Error liking comment:", error);
       // Revert optimistic update
       setComments(comments);
     }
@@ -264,7 +264,7 @@ const Post = ({ data }) => {
         });
       } catch (error) {
         if (error.name !== 'AbortError') {
-          console.error("Error sharing:", error);
+          // console.error("Error sharing:", error);
         }
       }
     } else {
@@ -316,7 +316,7 @@ const Post = ({ data }) => {
       // Reload to get updated post
       window.location.reload();
     } catch (error) {
-      console.error("Error updating post:", error);
+      // console.error("Error updating post:", error);
       alert("Failed to update post. Please try again.");
     } finally {
       setEditing(false);
@@ -330,7 +330,7 @@ const Post = ({ data }) => {
       setIsSaved(!isSaved);
       // Update user's savedPosts in Redux if needed
     } catch (error) {
-      console.error("Error saving post:", error);
+      // console.error("Error saving post:", error);
       alert("Failed to save post. Please try again.");
     } finally {
       setSaving(false);
@@ -404,9 +404,17 @@ const Post = ({ data }) => {
             user={isUserAuthor ? user : null}
             size="32px"
           />
-          <span style={{position:"relative", bottom:"2px"}}>
-            {displayName}
-          </span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+            <span style={{position:"relative", bottom:"2px"}}>
+              {displayName}
+            </span>
+            {data.feeling && data.feeling.type && (
+              <span className="post-feeling-text" style={{ fontSize: "0.85rem", color: "var(--gray)" }}>
+                is feeling {data.feeling.type.charAt(0).toUpperCase() + data.feeling.type.slice(1)}
+                {data.feeling.activity && ` while ${data.feeling.activity}`}
+              </span>
+            )}
+          </div>
         </div>
         {!isUserAuthor && (
           <div 
@@ -505,6 +513,25 @@ const Post = ({ data }) => {
         />
       )}
 
+      {/* Post Video (if any) */}
+      {data.video && (
+        <video
+          src={process.env.REACT_APP_PUBLIC_FOLDER + data.video}
+          controls
+          style={{ width: "100%", maxHeight: "30rem", borderRadius: "0.5rem" }}
+        />
+      )}
+
+      {/* Post Location (if any) */}
+      {data.location && data.location.name && (
+        <div className="post-location">
+          <UilLocationPoint size="16" />
+          <span>
+            {displayName} at {data.location.name}
+          </span>
+        </div>
+      )}
+
       {/* Liked By Section */}
       {likes > 0 && likedByUsers.length > 0 && (
         <div className="liked-by-section">
@@ -583,14 +610,14 @@ const Post = ({ data }) => {
                       const response = await UserApi.getUser(likeId);
                       return response?.data || response;
                     } catch (error) {
-                      console.error(`Error fetching user ${likeId}:`, error);
+                      // console.error(`Error fetching user ${likeId}:`, error);
                       return null;
                     }
                   });
                   const users = await Promise.all(userPromises);
                   setAllLikedByUsers(users.filter(u => u !== null));
                 } catch (error) {
-                  console.error("Error fetching all liked by users:", error);
+                  // console.error("Error fetching all liked by users:", error);
                 } finally {
                   setLoadingLikedBy(false);
                 }

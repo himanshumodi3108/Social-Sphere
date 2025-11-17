@@ -11,7 +11,7 @@ function saveToLocalStorage(store) {
       const serializedStore = JSON.stringify(store);
       window.localStorage.setItem('store', serializedStore);
   } catch(e) {
-      console.log(e);
+      // console.log(e);
   }
 }
 
@@ -28,7 +28,7 @@ function loadFromLocalStorage() {
       }
       return parsedStore;
   } catch(e) {
-      console.log(e);
+      // console.log(e);
       return undefined;
   }
 }

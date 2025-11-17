@@ -8,7 +8,7 @@ export const getTimelinePosts = (id) => async (dispatch) => {
     const posts = data?.data || data || [];
     dispatch({ type: "RETREIVING_SUCCESS", data: posts });
   } catch (error) {
-    console.error("Error fetching timeline posts:", error);
+    // console.error("Error fetching timeline posts:", error);
     dispatch({ type: "RETREIVING_FAIL" });
   }
 };

@@ -76,6 +76,11 @@ UserSchema.index({ email: 1 }, { sparse: true });
 UserSchema.index({ followers: 1 });
 UserSchema.index({ following: 1 });
 UserSchema.index({ blocked: 1 });
+// Text search indexes for better search performance
+UserSchema.index({ firstname: 'text', lastname: 'text', username: 'text' });
+// Compound indexes for common queries
+UserSchema.index({ firstname: 1, lastname: 1 });
+UserSchema.index({ username: 1, _id: 1 });
 
 const UserModel = mongoose.model("Users", UserSchema);
 export default UserModel;

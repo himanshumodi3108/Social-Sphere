@@ -53,6 +53,10 @@ export const createPost = async (req, res) => {
       postData.scheduledAt = new Date(bodyWithoutId.scheduledAt);
     }
     
+    if (bodyWithoutId.feeling) {
+      postData.feeling = bodyWithoutId.feeling;
+    }
+    
     try {
       const corruptedPost = await PostModel.findById(postData.userId);
       if (corruptedPost) {

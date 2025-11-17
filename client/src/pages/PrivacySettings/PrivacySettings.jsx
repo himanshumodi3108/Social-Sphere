@@ -36,7 +36,7 @@ const PrivacySettings = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error("Error updating privacy settings:", error);
+      // console.error("Error updating privacy settings:", error);
       alert("Failed to update privacy settings. Please try again.");
     } finally {
       setSaving(false);

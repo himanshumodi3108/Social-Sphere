@@ -53,7 +53,7 @@ const User = ({ person }) => {
       actionPromise.catch((error) => {
         // Revert optimistic update on error
         setFollowing(wasFollowing);
-        console.error("Follow/unfollow error:", error);
+        // console.error("Follow/unfollow error:", error);
       });
     }
     

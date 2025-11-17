@@ -15,7 +15,7 @@ export async function generateKeyPair() {
     );
     return keyPair;
   } catch (error) {
-    console.error("Error generating key pair:", error);
+    // console.error("Error generating key pair:", error);
     throw error;
   }
 }
@@ -27,7 +27,7 @@ export async function exportPublicKey(publicKey) {
     const exportedAsBase64 = arrayBufferToBase64(exported);
     return exportedAsBase64;
   } catch (error) {
-    console.error("Error exporting public key:", error);
+    // console.error("Error exporting public key:", error);
     throw error;
   }
 }
@@ -48,7 +48,7 @@ export async function importPublicKey(base64Key) {
     );
     return publicKey;
   } catch (error) {
-    console.error("Error importing public key:", error);
+    // console.error("Error importing public key:", error);
     throw error;
   }
 }
@@ -60,7 +60,7 @@ export async function exportPrivateKey(privateKey) {
     const exportedAsBase64 = arrayBufferToBase64(exported);
     return exportedAsBase64;
   } catch (error) {
-    console.error("Error exporting private key:", error);
+    // console.error("Error exporting private key:", error);
     throw error;
   }
 }
@@ -81,7 +81,7 @@ export async function importPrivateKey(base64Key) {
     );
     return privateKey;
   } catch (error) {
-    console.error("Error importing private key:", error);
+    // console.error("Error importing private key:", error);
     throw error;
   }
 }
@@ -100,7 +100,7 @@ export async function encryptMessage(message, publicKey) {
     );
     return arrayBufferToBase64(encrypted);
   } catch (error) {
-    console.error("Error encrypting message:", error);
+    // console.error("Error encrypting message:", error);
     throw error;
   }
 }
@@ -119,7 +119,7 @@ export async function decryptMessage(encryptedMessage, privateKey) {
     const decoder = new TextDecoder();
     return decoder.decode(decrypted);
   } catch (error) {
-    console.error("Error decrypting message:", error);
+    // console.error("Error decrypting message:", error);
     throw error;
   }
 }
@@ -137,7 +137,7 @@ export async function generateSharedKey() {
     );
     return key;
   } catch (error) {
-    console.error("Error generating shared key:", error);
+    // console.error("Error generating shared key:", error);
     throw error;
   }
 }
@@ -148,7 +148,7 @@ export async function exportSharedKey(key) {
     const exported = await window.crypto.subtle.exportKey("raw", key);
     return arrayBufferToBase64(exported);
   } catch (error) {
-    console.error("Error exporting shared key:", error);
+    // console.error("Error exporting shared key:", error);
     throw error;
   }
 }
@@ -169,7 +169,7 @@ export async function importSharedKey(base64Key) {
     );
     return key;
   } catch (error) {
-    console.error("Error importing shared key:", error);
+    // console.error("Error importing shared key:", error);
     throw error;
   }
 }
@@ -194,7 +194,7 @@ export async function encryptMessageAES(message, key) {
     combined.set(encryptedArray, iv.length);
     return arrayBufferToBase64(combined.buffer);
   } catch (error) {
-    console.error("Error encrypting message with AES:", error);
+    // console.error("Error encrypting message with AES:", error);
     throw error;
   }
 }
@@ -216,7 +216,7 @@ export async function decryptMessageAES(encryptedMessage, key) {
     const decoder = new TextDecoder();
     return decoder.decode(decrypted);
   } catch (error) {
-    console.error("Error decrypting message with AES:", error);
+    // console.error("Error decrypting message with AES:", error);
     throw error;
   }
 }
@@ -247,7 +247,7 @@ export function storeChatKey(chatId, keyData) {
     keys[chatId] = keyData;
     localStorage.setItem("chatKeys", JSON.stringify(keys));
   } catch (error) {
-    console.error("Error storing chat key:", error);
+    // console.error("Error storing chat key:", error);
   }
 }
 
@@ -257,7 +257,7 @@ export function getChatKey(chatId) {
     const keys = JSON.parse(localStorage.getItem("chatKeys") || "{}");
     return keys[chatId] || null;
   } catch (error) {
-    console.error("Error retrieving chat key:", error);
+    // console.error("Error retrieving chat key:", error);
     return null;
   }
 }
@@ -299,7 +299,7 @@ async function deriveSharedKeyFromChat(chatId, userId1, userId2) {
     
     return key;
   } catch (error) {
-    console.error("Error deriving shared key:", error);
+    // console.error("Error deriving shared key:", error);
     throw error;
   }
 }
@@ -324,7 +324,7 @@ export async function initializeChatEncryption(chatId, otherUserId, currentUserI
     
     return keyData;
   } catch (error) {
-    console.error("Error initializing chat encryption:", error);
+    // console.error("Error initializing chat encryption:", error);
     throw error;
   }
 }

@@ -24,6 +24,9 @@ const PostShare = () => {
   const [scheduleDateTime, setScheduleDateTime] = useState("");
   const [postText, setPostText] = useState("");
   const [privacy, setPrivacy] = useState('public');
+  const [feeling, setFeeling] = useState(null);
+  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
+  const [feelingActivity, setFeelingActivity] = useState("");
   const desc = useRef();
   const videoRef = useRef();
 
@@ -117,7 +120,7 @@ const PostShare = () => {
         
         newPost.image = sanitizedFileName;
       } catch (err) {
-        console.error("Error uploading image:", err);
+        // console.error("Error uploading image:", err);
         alert("Failed to upload image. Please try again.");
         return; // Don't create post if image upload fails
       }
@@ -140,7 +143,7 @@ const PostShare = () => {
         
         newPost.video = sanitizedFileName;
       } catch (err) {
-        console.error("Error uploading video:", err);
+        // console.error("Error uploading video:", err);
         alert("Failed to upload video. Please try again.");
         return; // Don't create post if video upload fails
       }
@@ -156,6 +159,14 @@ const PostShare = () => {
       newPost.scheduledAt = scheduledAt;
     }
     
+    // Add feeling if provided
+    if (feeling) {
+      newPost.feeling = {
+        type: feeling,
+        activity: feelingActivity.trim() || undefined
+      };
+    }
+    
     try {
       await dispatch(uploadPost(newPost));
       resetShare();
@@ -164,7 +175,7 @@ const PostShare = () => {
         dispatch(getTimelinePosts(user._id));
       }
     } catch (err) {
-      console.error("Error creating post:", err);
+      // console.error("Error creating post:", err);
       alert("Failed to create post. Please try again.");
     }
   };
@@ -188,21 +199,40 @@ const PostShare = () => {
     }
   };
 
+  // Handle feeling selection
+  const handleFeelingSelect = (feelingType) => {
+    setFeeling(feelingType);
+    setShowFeelingPicker(false);
+  };
+
   // Reset Post Share
   const resetShare = () => {
     setImage(null);
     setVideo(null);
     setLocation(null);
     setScheduledAt(null);
+    setFeeling(null);
+    setFeelingActivity("");
     setPostText("");
     setShowLocationInput(false);
     setShowSchedulePicker(false);
+    setShowFeelingPicker(false);
     setLocationInput("");
     setScheduleDateTime("");
     if (desc.current) {
       desc.current.value = "";
     }
   };
+
+  // Popular feelings list (similar to Facebook)
+  const popularFeelings = [
+    'happy', 'sad', 'excited', 'loved', 'blessed', 'grateful', 'proud', 
+    'thankful', 'amazed', 'confused', 'stressed', 'tired', 'angry', 
+    'worried', 'hopeful', 'nostalgic', 'silly', 'motivated', 'peaceful', 
+    'energetic', 'calm', 'anxious', 'confident', 'curious', 'determined', 
+    'frustrated', 'inspired', 'lonely', 'optimistic', 'overwhelmed', 
+    'relieved', 'surprised', 'thoughtful', 'triumphant', 'wonderful'
+  ];
   return (
     <div className="PostShare">
       <Avatar
@@ -216,7 +246,7 @@ const PostShare = () => {
       <div>
         <div className="post-input-wrapper">
           <textarea
-            placeholder="What's happening? Use #hashtags to tag your post! (Shift+Enter for new line, Enter to submit)"
+            placeholder="What's happening?"
             value={postText}
             onChange={(e) => setPostText(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -258,6 +288,14 @@ const PostShare = () => {
               >
                 <UilSchedule />
                 Schedule
+              </div>
+              <div 
+                className="option" 
+                style={{ color: "#FFD700" }}
+                onClick={() => setShowFeelingPicker(!showFeelingPicker)}
+              >
+                <span style={{ fontSize: "1.2rem" }}>😊</span>
+                Feeling
               </div>
               
               {/* Privacy Selector */}
@@ -360,6 +398,89 @@ const PostShare = () => {
           </div>
         )}
 
+        {/* Feeling Picker Modal */}
+        {showFeelingPicker && (
+          <div className="modal-overlay" onClick={() => setShowFeelingPicker(false)}>
+            <div className="modal-content feeling-picker-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>How are you feeling?</h3>
+                <UilTimes onClick={() => setShowFeelingPicker(false)} />
+              </div>
+              <div className="modal-body">
+                <div className="feelings-grid">
+                  {popularFeelings.map((feelingType) => (
+                    <div
+                      key={feelingType}
+                      className="feeling-option"
+                      onClick={() => handleFeelingSelect(feelingType)}
+                    >
+                      <span className="feeling-emoji">
+                        {feelingType === 'happy' && '😊'}
+                        {feelingType === 'sad' && '😢'}
+                        {feelingType === 'excited' && '🤩'}
+                        {feelingType === 'loved' && '🥰'}
+                        {feelingType === 'blessed' && '🙏'}
+                        {feelingType === 'grateful' && '🙏'}
+                        {feelingType === 'proud' && '😎'}
+                        {feelingType === 'thankful' && '🙏'}
+                        {feelingType === 'amazed' && '😲'}
+                        {feelingType === 'confused' && '😕'}
+                        {feelingType === 'stressed' && '😰'}
+                        {feelingType === 'tired' && '😴'}
+                        {feelingType === 'angry' && '😠'}
+                        {feelingType === 'worried' && '😟'}
+                        {feelingType === 'hopeful' && '🤞'}
+                        {feelingType === 'nostalgic' && '🥺'}
+                        {feelingType === 'silly' && '🤪'}
+                        {feelingType === 'motivated' && '💪'}
+                        {feelingType === 'peaceful' && '😌'}
+                        {feelingType === 'energetic' && '⚡'}
+                        {feelingType === 'calm' && '😇'}
+                        {feelingType === 'anxious' && '😰'}
+                        {feelingType === 'confident' && '😎'}
+                        {feelingType === 'curious' && '🤔'}
+                        {feelingType === 'determined' && '💪'}
+                        {feelingType === 'frustrated' && '😤'}
+                        {feelingType === 'inspired' && '✨'}
+                        {feelingType === 'lonely' && '😔'}
+                        {feelingType === 'optimistic' && '😊'}
+                        {feelingType === 'overwhelmed' && '😵'}
+                        {feelingType === 'relieved' && '😌'}
+                        {feelingType === 'surprised' && '😮'}
+                        {feelingType === 'thoughtful' && '🤔'}
+                        {feelingType === 'triumphant' && '🎉'}
+                        {feelingType === 'wonderful' && '😊'}
+                        {!['happy', 'sad', 'excited', 'loved', 'blessed', 'grateful', 'proud', 'thankful', 'amazed', 'confused', 'stressed', 'tired', 'angry', 'worried', 'hopeful', 'nostalgic', 'silly', 'motivated', 'peaceful', 'energetic', 'calm', 'anxious', 'confident', 'curious', 'determined', 'frustrated', 'inspired', 'lonely', 'optimistic', 'overwhelmed', 'relieved', 'surprised', 'thoughtful', 'triumphant', 'wonderful'].includes(feelingType) && '😊'}
+                      </span>
+                      <span className="feeling-text">{feelingType.charAt(0).toUpperCase() + feelingType.slice(1)}</span>
+                    </div>
+                  ))}
+                </div>
+                {feeling && (
+                  <div className="feeling-activity-input">
+                    <input
+                      type="text"
+                      placeholder="What are you doing? (optional)"
+                      value={feelingActivity}
+                      onChange={(e) => setFeelingActivity(e.target.value)}
+                      className="activity-input"
+                    />
+                  </div>
+                )}
+                <div className="modal-actions">
+                  <button onClick={() => {
+                    setShowFeelingPicker(false);
+                    setFeeling(null);
+                    setFeelingActivity("");
+                  }} className="cancel-btn">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Preview Image */}
         {image && (
           <div className="previewImage">
@@ -394,6 +515,17 @@ const PostShare = () => {
               setScheduledAt(null);
               setScheduleDateTime("");
             }} />
+          </div>
+        )}
+
+        {feeling && (
+          <div className="feeling-tag">
+            <span style={{ fontSize: "1rem" }}>😊</span>
+            <span>
+              Feeling {feeling.charAt(0).toUpperCase() + feeling.slice(1)}
+              {feelingActivity.trim() && ` while ${feelingActivity.trim()}`}
+            </span>
+            <UilTimes size="16" onClick={() => { setFeeling(null); setFeelingActivity(""); }} />
           </div>
         )}
       </div>

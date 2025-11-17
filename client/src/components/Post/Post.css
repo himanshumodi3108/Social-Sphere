@@ -52,6 +52,22 @@
     background-color: rgba(135, 206, 235, 0.2);
 }
 
+.post-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--inputColor);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--textColor);
+    margin-top: 0.5rem;
+}
+
+.post-location svg {
+    color: var(--location);
+}
+
 .post-edit-section {
     display: flex;
     flex-direction: column;

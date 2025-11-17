@@ -1,0 +1,242 @@
+.GroupPostShare{
+    display: flex;
+    gap: 1rem;
+    background-color: var(--cardColor);
+    padding: 1rem;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+}
+
+.GroupPostShare>div{
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    gap: 1rem;
+}
+
+.post-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.post-textarea {
+    background-color: var(--inputColor);
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 17px;
+    border: none;
+    outline: none;
+    width: 100%;
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.post-textarea:focus {
+    outline: 2px solid #0096FF;
+    outline-offset: -2px;
+}
+
+.postOptions{
+    display: flex;
+    justify-content: space-around;
+}
+
+.option{
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    gap: 0.5rem;
+}
+
+.option:hover{
+    cursor: pointer;
+}
+
+.ps-button{
+    padding: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 12px;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.previewImage{
+    position: relative;
+}
+
+.previewImage>svg{
+    position: absolute;
+    right: 1rem;
+    top: 0.5rem;
+    cursor: pointer;
+}
+
+.previewImage>img{
+    width: 100%;
+    max-height: 20rem;
+    object-fit: cover;
+    border-radius: 0.5rem;
+}
+
+.previewVideo{
+    position: relative;
+}
+
+.previewVideo>svg{
+    position: absolute;
+    right: 1rem;
+    top: 0.5rem;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.location-tag,
+.schedule-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--inputColor);
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.location-tag svg,
+.schedule-tag svg {
+    cursor: pointer;
+    color: var(--gray);
+}
+
+.location-tag svg:hover,
+.schedule-tag svg:hover {
+    color: var(--textColor);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--cardColor);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--textColor);
+}
+
+.modal-header svg {
+    cursor: pointer;
+    color: var(--gray);
+}
+
+.modal-header svg:hover {
+    color: var(--textColor);
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.location-input,
+.schedule-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--inputColor);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background: var(--inputColor);
+    color: var(--textColor);
+}
+
+.location-input:focus,
+.schedule-input:focus {
+    outline: 2px solid #0096FF;
+    outline-offset: -2px;
+}
+
+.schedule-info {
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin: 0;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.cancel-btn,
+.submit-btn {
+    padding: 0.5rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.cancel-btn {
+    background: var(--inputColor);
+    color: var(--textColor);
+}
+
+.cancel-btn:hover {
+    background: var(--gray);
+}
+
+.submit-btn {
+    background: #0096FF;
+    color: white;
+}
+
+.submit-btn:hover {
+    background: #007acc;
+}
+
+.hide-in-mobile {
+    display: flex;
+}
+
+@media (max-width: 768px) {
+    .hide-in-mobile {
+        display: none;
+    }
+}
+
+

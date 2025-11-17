@@ -46,7 +46,7 @@ const NotificationSettings = () => {
     try {
       // TODO: Implement API call to save notification preferences
       // await updateNotificationPreferences(preferences);
-      console.log("Saving preferences:", preferences);
+      // console.log("Saving preferences:", preferences);
       
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -54,7 +54,7 @@ const NotificationSettings = () => {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error("Error saving notification preferences:", error);
+      // console.error("Error saving notification preferences:", error);
       alert("Failed to save notification preferences. Please try again.");
     } finally {
       setSaving(false);

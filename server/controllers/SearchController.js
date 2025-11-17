@@ -79,7 +79,12 @@ export const search = async (req, res) => {
       if (isHashtag) {
         postQuery.desc = new RegExp(`#${searchText}\\b`, "i");
       } else {
-        postQuery.desc = new RegExp(searchText, "i");
+        // Search in description or location
+        const searchRegex = new RegExp(searchText, "i");
+        postQuery.$or = [
+          { desc: searchRegex },
+          { 'location.name': searchRegex }
+        ];
       }
 
       // Only show public posts or posts from friends

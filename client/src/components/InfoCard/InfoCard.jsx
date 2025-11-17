@@ -74,7 +74,7 @@ const InfoCard = () => {
           const userData = response?.data || response;
           setProfileUser(userData);
         } catch (error) {
-          console.error("Error fetching profile user:", error);
+          // console.error("Error fetching profile user:", error);
         }
       }
     };
@@ -193,7 +193,7 @@ const InfoCard = () => {
                 }
                 setIsFollowing(!isFollowing);
               } catch (error) {
-                console.error("Error following/unfollowing:", error);
+                // console.error("Error following/unfollowing:", error);
               } finally {
                 setLoading(false);
               }
@@ -219,7 +219,7 @@ const InfoCard = () => {
                 }
                 setIsBlocked(!isBlocked);
               } catch (error) {
-                console.error("Error blocking/unblocking:", error);
+                // console.error("Error blocking/unblocking:", error);
               } finally {
                 setLoading(false);
               }

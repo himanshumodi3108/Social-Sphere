@@ -55,40 +55,68 @@ export const getAllUsers = async (req, res) => {
   try {
     const { page, limit, skip } = getPaginationParams(req);
     const currentUserId = req.userId || req.query.currentUserId;
+    const search = req.query.search;
 
     // Build query - exclude blocked users if currentUserId is provided
     let query = {};
+    let blockedUserIds = [];
+    
     if (currentUserId) {
-      const currentUser = await UserModel.findById(currentUserId).select('blocked');
+      // Optimize: Only fetch blocked array, not entire user
+      const currentUser = await UserModel.findById(currentUserId).select('blocked').lean();
       if (currentUser && Array.isArray(currentUser.blocked) && currentUser.blocked.length > 0) {
+        blockedUserIds = currentUser.blocked.map(id => String(id));
         query._id = { $nin: currentUser.blocked };
       }
     }
 
-    // Get total count
+    // Add search functionality - optimized with regex (text index requires exact setup)
+    if (search && search.trim()) {
+      const searchTerm = search.trim();
+      // Escape special regex characters and use case-insensitive search
+      const escapedTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const searchRegex = new RegExp(escapedTerm, 'i');
+      
+      // Use $or for searching across multiple fields
+      query.$or = [
+        { firstname: searchRegex },
+        { lastname: searchRegex },
+        { username: searchRegex }
+      ];
+      
+      // If query already has _id filter, combine with $and
+      if (query._id) {
+        query = {
+          $and: [
+            { _id: query._id },
+            { $or: query.$or }
+          ]
+        };
+      }
+    }
+
+    // Get total count (optimized)
     const total = await UserModel.countDocuments(query);
 
-    // Fetch users with pagination
+    // Fetch users with pagination - use lean() for better performance
     let users = await UserModel.find(query)
-      .select('-password')
+      .select('-password -email -emailVerified -savedPosts')
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
 
+    // Clean up arrays
     users = users.map((user) => {
-      const { password, ...otherDetails } = user._doc;
-      
-      // Clean up arrays
-      if (Array.isArray(otherDetails.followers)) {
-        otherDetails.followers = otherDetails.followers.filter(f => f !== null && f !== undefined && f !== '');
+      if (Array.isArray(user.followers)) {
+        user.followers = user.followers.filter(f => f !== null && f !== undefined && f !== '');
       }
-      if (Array.isArray(otherDetails.following)) {
-        otherDetails.following = otherDetails.following.filter(f => f !== null && f !== undefined && f !== '');
+      if (Array.isArray(user.following)) {
+        user.following = user.following.filter(f => f !== null && f !== undefined && f !== '');
       }
-      
-      return otherDetails;
+      return user;
     });
 
-    logger.info("Users fetched", { count: users.length, page, limit, total });
+    logger.info("Users fetched", { count: users.length, page, limit, total, search: !!search });
     res.status(200).json(createPaginationResponse(users, total, page, limit));
   } catch (error) {
     logger.error("Error in getAllUsers", { error: error.message });

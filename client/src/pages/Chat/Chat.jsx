@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from "react";
 import ChatBox from "../../components/ChatBox/ChatBox";
+import GroupChatBox from "../../components/GroupChatBox/GroupChatBox";
 import Conversation from "../../components/Coversation/Conversation";
 import LogoSearch from "../../components/LogoSearch/LogoSearch";
 import NavIcons from "../../components/NavIcons/NavIcons";
@@ -28,7 +29,7 @@ const Chat = () => {
         const { data } = await userChats(user._id);
         if (isMounted) setChats(data); // ✅ Only update state if component is mounted
       } catch (error) {
-        console.log(error);
+        // console.log(error);
       }
     };
 
@@ -61,11 +62,14 @@ const Chat = () => {
     }
   }, [sendMessage]);
 
-  // Get the message from socket server
+  // Get the message from socket server (for individual chats)
   useEffect(() => {
     const handleReceiveMessage = (data) => {
-      console.log(data);
-      setReceivedMessage(data);
+      // console.log(data);
+      // Only handle individual chat messages here
+      if (currentChat && currentChat.type !== 'group') {
+        setReceivedMessage(data);
+      }
     };
 
     socket.current.on("recieve-message", handleReceiveMessage);
@@ -73,9 +77,13 @@ const Chat = () => {
     return () => {
       socket.current.off("recieve-message", handleReceiveMessage); // ✅ Cleanup socket listener
     };
-  }, []);
+  }, [currentChat]);
 
   const checkOnlineStatus = (chat) => {
+    // Groups don't have online status
+    if (chat.type === 'group') {
+      return false;
+    }
     const chatMember = chat.members.find((member) => member !== user._id);
     const online = onlineUsers.find((user) => user.userId === chatMember);
     return online ? true : false;
@@ -116,12 +124,20 @@ const Chat = () => {
         </div>
 
         <div style={{height:"50%"}}>
-        <ChatBox
-          chat={currentChat}
-          currentUser={user._id}
-          setSendMessage={setSendMessage}
-          receivedMessage={receivedMessage}
-        />
+        {currentChat?.type === 'group' ? (
+          <GroupChatBox
+            groupId={currentChat.groupId}
+            currentUser={user._id}
+            groupName={currentChat.name}
+          />
+        ) : (
+          <ChatBox
+            chat={currentChat}
+            currentUser={user._id}
+            setSendMessage={setSendMessage}
+            receivedMessage={receivedMessage}
+          />
+        )}
         </div>
       </div>
     </div>

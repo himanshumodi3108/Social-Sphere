@@ -32,7 +32,7 @@ const authMiddleWare = async (req, res, next) => {
       return res.status(401).json({ message: "Token expired. Please log in again." });
     }
     
-    console.log("Auth middleware error:", error.message);
+    // console.log("Auth middleware error:", error.message);
     return res.status(401).json({ message: "Authentication failed" });
   }
 };

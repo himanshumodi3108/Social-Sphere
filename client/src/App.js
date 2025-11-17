@@ -62,7 +62,7 @@ function App() {
             data: { user: data, token } 
           });
         } catch (error) {
-          console.error("Error fetching user data on app load:", error);
+          // console.error("Error fetching user data on app load:", error);
           // Token might be invalid, clear it
           localStorage.removeItem('authToken');
           localStorage.removeItem('profile');

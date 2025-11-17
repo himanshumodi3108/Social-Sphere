@@ -6,7 +6,7 @@ import Home from "../../img/home1.png";
 import Chat from "../../img/chat1.png";
 import User from "../../img/user.png";
 
-import { UilSetting, UilBookmark } from "@iconscout/react-unicons";
+import { UilSetting, UilBookmark, UilUsersAlt } from "@iconscout/react-unicons";
 import NotificationBell from "../NotificationBell/NotificationBell";
 import "./NavIcons.css";
 
@@ -77,6 +77,17 @@ const NavIcons = () => {
       
       <Link to="/chat">
         <img src={Chat} alt="Chat" />
+      </Link>
+      <Link 
+        to="/groups" 
+        title="Groups"
+        style={{ 
+          color: location.pathname.startsWith("/groups") ? "#0096FF" : "inherit",
+          display: "flex",
+          alignItems: "center"
+        }}
+      >
+        <UilUsersAlt size="24" />
       </Link>
       <div 
         onClick={handleShowSaved}

@@ -41,7 +41,7 @@ const LogoSearch = () => {
         const { data } = await search(query, filters);
         setSearchResults(data);
       } catch (error) {
-        console.error("Search error:", error);
+        // console.error("Search error:", error);
         setSearchResults({ users: [], posts: [], hashtags: [], query: query });
       } finally {
         setIsSearching(false);

@@ -33,7 +33,7 @@ export const followUser = (id, data)=> async(dispatch)=> {
             }));
         }
     } catch (error) {
-        console.error("Error following user:", error);
+        // console.error("Error following user:", error);
         // Revert the optimistic update on error
         dispatch({type: "UNFOLLOW_USER", data: id})
         throw error; // Re-throw so components can handle if needed
@@ -48,8 +48,8 @@ export const unfollowUser = (id, data)=> async(dispatch)=> {
         // Update user data with server response if available
         if (response?.data?.updatedUser) {
             const token = localStorage.getItem('authToken');
-            console.log("Unfollow response - updatedUser:", response.data.updatedUser);
-            console.log("Unfollow response - following array:", response.data.updatedUser.following);
+            // console.log("Unfollow response - updatedUser:", response.data.updatedUser);
+            // console.log("Unfollow response - following array:", response.data.updatedUser.following);
             dispatch({type: "UPDATING_SUCCESS", data: { user: response.data.updatedUser, token }})
             
             // Also dispatch a custom event to notify components that stats might need refreshing
@@ -61,10 +61,10 @@ export const unfollowUser = (id, data)=> async(dispatch)=> {
                 } 
             }));
         } else {
-            console.warn("Unfollow response missing updatedUser:", response);
+            // console.warn("Unfollow response missing updatedUser:", response);
         }
     } catch (error) {
-        console.error("Error unfollowing user:", error);
+        // console.error("Error unfollowing user:", error);
         // Revert the optimistic update on error
         dispatch({type: "FOLLOW_USER", data: id})
         throw error; // Re-throw so components can handle if needed
@@ -87,7 +87,7 @@ export const blockUser = (id) => async (dispatch) => {
         alert("User blocked successfully");
         window.location.reload();
     } catch (error) {
-        console.error("Error blocking user:", error);
+        // console.error("Error blocking user:", error);
         alert("Failed to block user. Please try again.");
         throw error;
     }
@@ -99,7 +99,7 @@ export const unblockUser = (id) => async (dispatch) => {
         alert("User unblocked successfully");
         window.location.reload();
     } catch (error) {
-        console.error("Error unblocking user:", error);
+        // console.error("Error unblocking user:", error);
         alert("Failed to unblock user. Please try again.");
         throw error;
     }

@@ -1,3 +1,14 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /chat/
+Disallow: /profile/
+Disallow: /groups/*/chat
+
+# Sitemap
+Sitemap: https://himanshu-social-sphere.vercel.app/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1

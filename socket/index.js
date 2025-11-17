@@ -9,8 +9,32 @@ dotenv.config();
 const httpServer = createServer();
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      
+      // List of allowed origins
+      const allowedOrigins = [
+        process.env.FRONTEND_URL,
+        "http://localhost:3000",
+        "https://himanshu-social-sphere.vercel.app",
+        "http://localhost:3001", // In case port 3000 is busy
+      ].filter(Boolean); // Remove undefined values
+      
+      // Check if origin is in allowed list
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        // For development, allow localhost on any port
+        if (origin.startsWith("http://localhost:") || origin.startsWith("https://localhost:")) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      }
+    },
     credentials: true,
+    methods: ["GET", "POST"],
   },
 });
 
@@ -38,7 +62,7 @@ let activeUsers = [];
 const userSocketMap = new Map(); // userId -> socketId mapping
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  // console.log("User connected:", socket.id);
 
   // Add new user
   socket.on("new-user-add", (newUserId) => {
@@ -52,7 +76,7 @@ io.on("connection", (socket) => {
     activeUsers.push({ userId: newUserId, socketId: socket.id });
     userSocketMap.set(newUserId, socket.id);
     
-    console.log("User added:", newUserId, "Active users:", activeUsers.length);
+    // console.log("User added:", newUserId, "Active users:", activeUsers.length);
     
     // Send all active users to new user
     io.emit("get-users", activeUsers);
@@ -65,7 +89,7 @@ io.on("connection", (socket) => {
     if (user) {
       activeUsers = activeUsers.filter((user) => user.socketId !== socket.id);
       userSocketMap.delete(user.userId);
-      console.log("User disconnected:", user.userId, "Active users:", activeUsers.length);
+      // console.log("User disconnected:", user.userId, "Active users:", activeUsers.length);
       // Send updated active users to all clients
       io.emit("get-users", activeUsers);
     }
@@ -78,9 +102,9 @@ io.on("connection", (socket) => {
     
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("recieve-message", data);
-      console.log("Message sent to:", receiverId);
+      // console.log("Message sent to:", receiverId);
     } else {
-      console.log("User not online:", receiverId);
+      // console.log("User not online:", receiverId);
     }
   });
 
@@ -91,9 +115,9 @@ io.on("connection", (socket) => {
     
     if (userSocketId) {
       io.to(userSocketId).emit("new-notification", notification);
-      console.log("Notification sent to:", userId);
+      // console.log("Notification sent to:", userId);
     } else {
-      console.log("User not online for notification:", userId);
+      // console.log("User not online for notification:", userId);
     }
   });
 
@@ -101,7 +125,7 @@ io.on("connection", (socket) => {
   socket.on("join-notifications", (userId) => {
     if (userId) {
       socket.join(`notifications-${userId}`);
-      console.log("User joined notifications room:", userId);
+      // console.log("User joined notifications room:", userId);
     }
   });
 
@@ -109,7 +133,7 @@ io.on("connection", (socket) => {
   socket.on("leave-notifications", (userId) => {
     if (userId) {
       socket.leave(`notifications-${userId}`);
-      console.log("User left notifications room:", userId);
+      // console.log("User left notifications room:", userId);
     }
   });
 
@@ -123,7 +147,7 @@ io.on("connection", (socket) => {
   socket.on("join-chat", (chatId) => {
     if (chatId) {
       socket.join(`chat-${chatId}`);
-      console.log("User joined chat:", chatId);
+      // console.log("User joined chat:", chatId);
     }
   });
 
@@ -131,7 +155,33 @@ io.on("connection", (socket) => {
   socket.on("leave-chat", (chatId) => {
     if (chatId) {
       socket.leave(`chat-${chatId}`);
-      console.log("User left chat:", chatId);
+      // console.log("User left chat:", chatId);
+    }
+  });
+
+  // Join group chat room
+  socket.on("join-group-chat", (groupId) => {
+    if (groupId) {
+      socket.join(`group-chat-${groupId}`);
+      // console.log("User joined group chat:", groupId);
+    }
+  });
+
+  // Leave group chat room
+  socket.on("leave-group-chat", (groupId) => {
+    if (groupId) {
+      socket.leave(`group-chat-${groupId}`);
+      // console.log("User left group chat:", groupId);
+    }
+  });
+
+  // Send message to group chat
+  socket.on("send-group-message", (data) => {
+    const { groupId } = data;
+    if (groupId) {
+      // Broadcast to all members in the group chat room
+      io.to(`group-chat-${groupId}`).emit("receive-group-message", data);
+      // console.log("Group message sent to group:", groupId);
     }
   });
 });

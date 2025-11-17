@@ -58,3 +58,23 @@ export const createGroupEvent = (groupId, data) =>
 export const rsvpToEvent = (groupId, eventId, rsvp) => 
   API.put(`/groups/${groupId}/events/${eventId}/rsvp`, { rsvp });
 
+// Member management
+export const addMember = (groupId, memberUserId) => 
+  API.post(`/groups/${groupId}/members`, { memberUserId });
+
+export const removeMember = (groupId, memberUserId) => 
+  API.delete(`/groups/${groupId}/members`, { data: { memberUserId } });
+
+export const makeMemberAdmin = (groupId, memberUserId) => 
+  API.put(`/groups/${groupId}/members/admin`, { memberUserId });
+
+// Group chat
+export const getOrCreateGroupChat = (groupId) => 
+  API.get(`/groups/${groupId}/chat`);
+
+export const addGroupMessage = (groupId, text) => 
+  API.post(`/groups/${groupId}/chat/messages`, { text });
+
+export const getGroupMessages = (groupId, page = 1, limit = 50) => 
+  API.get(`/groups/${groupId}/chat/messages?page=${page}&limit=${limit}`);
+

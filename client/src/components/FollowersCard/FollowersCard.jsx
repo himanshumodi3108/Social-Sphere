@@ -17,7 +17,7 @@ const FollowersCard = ({ location }) => {
         const usersArray = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
         setPersons(usersArray);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        // console.error("Error fetching users:", error);
         setPersons([]); // Set to empty array on error
       }
     };
@@ -33,7 +33,7 @@ const FollowersCard = ({ location }) => {
         const usersArray = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
         setPersons(usersArray);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        // console.error("Error fetching users:", error);
         setPersons([]); // Set to empty array on error
       }
     };

@@ -39,7 +39,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
     
     const getUserData = async () => {
       if (!userId) {
-        console.error("Could not find other user in chat");
+        // console.error("Could not find other user in chat");
         return;
       }
       
@@ -49,10 +49,10 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
         if (userData) {
           setUserData(userData);
         } else {
-          console.error("No user data received for userId:", userId);
+          // console.error("No user data received for userId:", userId);
         }
       } catch (error) {
-        console.error("Error fetching user data in ChatBox:", error);
+        // console.error("Error fetching user data in ChatBox:", error);
       }
     };
 
@@ -76,7 +76,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
           setEncryptionReady(true);
         }
       } catch (error) {
-        console.error("Error initializing encryption:", error);
+        // console.error("Error initializing encryption:", error);
         setEncryptionReady(false);
       }
     };
@@ -103,7 +103,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
               }
               return msg;
             } catch (error) {
-              console.error("Error decrypting message:", error);
+              // console.error("Error decrypting message:", error);
               return { ...msg, text: "[Unable to decrypt message]" };
             }
           })
@@ -111,7 +111,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
         
         setMessages(decryptedMessages);
       } catch (error) {
-        console.error("Error fetching messages:", error);
+        // console.error("Error fetching messages:", error);
       }
     };
 
@@ -152,10 +152,10 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
         setMessages([...messages, decryptedData]);
         setNewMessage("");
       } catch (error) {
-        console.error("Error sending message:", error);
+        // console.error("Error sending message:", error);
       }
     } catch (error) {
-      console.error("Error encrypting message:", error);
+      // console.error("Error encrypting message:", error);
     }
   };
 
@@ -174,7 +174,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
         
         setMessages((prev) => [...prev, decryptedMessage]);
       } catch (error) {
-        console.error("Error decrypting message:", error);
+        // console.error("Error decrypting message:", error);
         setMessages((prev) => [...prev, { ...receivedMessage, text: "[Unable to decrypt message]" }]);
       }
     };

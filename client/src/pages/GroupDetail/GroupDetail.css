@@ -1,37 +1,69 @@
 .GroupDetail {
-  padding: 1rem;
+  padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .back-button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: var(--inputColor);
-  border: none;
-  border-radius: 8px;
+  padding: 0.75rem 1.25rem;
+  background: linear-gradient(135deg, var(--inputColor) 0%, rgba(0, 150, 255, 0.05) 100%);
+  border: 1px solid rgba(0, 150, 255, 0.1);
+  border-radius: 10px;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--textColor);
 }
 
 .back-button:hover {
-  background-color: var(--gray);
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
+  border-color: #0096FF;
+  color: #0096FF;
+  transform: translateX(-4px);
+  box-shadow: 0 4px 12px rgba(0, 150, 255, 0.15);
 }
 
 .group-header {
-  background-color: var(--cardColor);
-  border-radius: 12px;
+  background: linear-gradient(135deg, var(--cardColor) 0%, rgba(0, 150, 255, 0.02) 100%);
+  border-radius: 20px;
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 150, 255, 0.1);
+  transition: all 0.3s;
+}
+
+.group-header:hover {
+  box-shadow: 0 12px 32px rgba(0, 150, 255, 0.12);
 }
 
 .group-cover {
   width: 100%;
-  height: 200px;
+  height: 250px;
   object-fit: cover;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: transform 0.5s ease;
+}
+
+.group-header:hover .group-cover {
+  transform: scale(1.02);
 }
 
 .group-info {
@@ -75,68 +107,147 @@
 .leave-group-btn,
 .edit-group-btn,
 .delete-group-btn {
-  padding: 0.75rem 1.5rem;
+  padding: 0.875rem 1.75rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: background-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .join-group-btn {
-  background-color: #0096FF;
+  background: linear-gradient(135deg, #0096FF 0%, #00D4FF 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(0, 150, 255, 0.3);
 }
 
 .join-group-btn:hover {
-  background-color: #007acc;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 150, 255, 0.4);
+}
+
+.join-group-btn:active {
+  transform: translateY(0);
 }
 
 .leave-group-btn {
-  background-color: var(--gray);
+  background: linear-gradient(135deg, var(--inputColor) 0%, rgba(255, 68, 68, 0.1) 100%);
   color: var(--textColor);
+  border: 1px solid rgba(255, 68, 68, 0.2);
 }
 
 .leave-group-btn:hover {
-  background-color: #ff4444;
+  background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
   color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.3);
+  border-color: transparent;
+}
+
+.leave-group-btn:active {
+  transform: translateY(0);
 }
 
 .edit-group-btn {
-  background-color: var(--inputColor);
+  background: linear-gradient(135deg, var(--inputColor) 0%, rgba(0, 150, 255, 0.05) 100%);
   color: var(--textColor);
+  border: 1px solid rgba(0, 150, 255, 0.2);
 }
 
 .edit-group-btn:hover {
-  background-color: var(--gray);
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.1) 0%, rgba(0, 212, 255, 0.1) 100%);
+  border-color: #0096FF;
+  color: #0096FF;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 150, 255, 0.15);
+}
+
+.edit-group-btn:active {
+  transform: translateY(0);
 }
 
 .delete-group-btn {
-  background-color: #ff4444;
+  background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
   color: white;
+  box-shadow: 0 4px 15px rgba(255, 68, 68, 0.3);
 }
 
 .delete-group-btn:hover {
-  background-color: #cc0000;
+  background: linear-gradient(135deg, #cc0000 0%, #ff4444 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+}
+
+.delete-group-btn:active {
+  transform: translateY(0);
 }
 
 .group-rules,
 .group-members,
-.group-posts {
-  background-color: var(--cardColor);
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+.group-posts,
+.group-chat-section {
+  background: linear-gradient(135deg, var(--cardColor) 0%, rgba(0, 150, 255, 0.02) 100%);
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 150, 255, 0.08);
+  transition: all 0.3s;
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-rules:hover,
+.group-members:hover,
+.group-posts:hover,
+.group-chat-section:hover {
+  box-shadow: 0 8px 20px rgba(0, 150, 255, 0.1);
+  border-color: rgba(0, 150, 255, 0.15);
 }
 
 .group-rules h3,
 .group-members h3,
-.group-posts h3 {
-  margin: 0 0 1rem 0;
+.group-posts h3,
+.group-chat-section h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0096FF 0%, #00D4FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  padding-bottom: 0.75rem;
+}
+
+.group-rules h3::after,
+.group-members h3::after,
+.group-posts h3::after,
+.group-chat-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #0096FF 0%, #00D4FF 100%);
+  border-radius: 2px;
 }
 
 .group-rules ul {
@@ -164,13 +275,18 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem;
-  border-radius: 8px;
-  transition: background-color 0.2s;
+  padding: 0.875rem;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  cursor: pointer;
 }
 
 .member-item:hover {
-  background-color: var(--inputColor);
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.08) 0%, rgba(0, 212, 255, 0.05) 100%);
+  border-color: rgba(0, 150, 255, 0.2);
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 150, 255, 0.1);
 }
 
 .member-info {
@@ -214,7 +330,52 @@
 .group-loading,
 .group-error {
   text-align: center;
-  padding: 3rem;
+  padding: 4rem 2rem;
   color: var(--gray);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.group-loading::after {
+  content: '';
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--inputColor);
+  border-top-color: #0096FF;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.join-prompt {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: linear-gradient(135deg, var(--cardColor) 0%, rgba(0, 150, 255, 0.03) 100%);
+  border-radius: 20px;
+  border: 2px dashed rgba(0, 150, 255, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.join-prompt p {
+  margin-bottom: 1.5rem;
+  color: var(--gray);
+  font-size: 1.1rem;
+  font-weight: 500;
 }
 
