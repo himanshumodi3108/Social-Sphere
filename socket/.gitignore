@@ -9,6 +9,7 @@ package-lock.json
 # Logs
 *.log
 npm-debug.log*
+/node_modules
 
 # IDE
 .vscode/
