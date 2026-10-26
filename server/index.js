@@ -1,13 +1,20 @@
 import dns from "node:dns";
 
-// Fix for Node.js querySrv ECONNREFUSED with MongoDB Atlas on Windows/local router DNS
+// Fix for Node.js querySrv ECONNREFUSED with MongoDB Atlas on local Windows router DNS
+if (process.platform === 'win32' && !process.env.RENDER) {
+  try {
+    dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+  } catch (dnsErr) {
+    // Ignore if custom DNS cannot be configured in the current environment
+  }
+}
+
 try {
-  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
   if (typeof dns.setDefaultResultOrder === 'function') {
     dns.setDefaultResultOrder('ipv4first');
   }
 } catch (dnsErr) {
-  // Ignore if custom DNS cannot be configured in the current environment
+  // Ignore
 }
 
 import express from "express";
@@ -164,74 +171,59 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
+// Start server immediately on 0.0.0.0 so Render detects the open port without delay
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logger.info(`Server listening on port ${PORT}`, { port: PORT, env: process.env.NODE_ENV || 'development' });
+});
+
 // Load MongoDB connection string
 const CONNECTION = process.env.MONGO_URI;
 
 if (!CONNECTION) {
-  // console.error("❌ ERROR: MONGO_URI is not set in .env file!");
-  process.exit(1);
-}
-
-// Check if connection string has a database name
-// MongoDB connection strings format: mongodb+srv://user:pass@host/dbname?options
-let connectionString = CONNECTION;
-const hasDbName = /mongodb\+?srv?:\/\/[^/]+\/[^/?]+/.test(CONNECTION);
-
-if (!hasDbName) {
-  // console.warn("⚠️  WARNING: No database name in connection string.");
-  // console.warn("📝 Adding 'socialsphere' as database name...");
-  
-  // Properly insert database name before query parameters
-  if (CONNECTION.includes('?')) {
-    // Handle both /? and ? cases
-    if (CONNECTION.includes('/?')) {
-      // Replace /? with /socialsphere?
-      connectionString = CONNECTION.replace(/\/\?/, '/socialsphere?');
-    } else {
-      // Replace ? with /socialsphere?
-      connectionString = CONNECTION.replace(/\?/, '/socialsphere?');
-    }
-  } else {
-    // Add /socialsphere at the end
-    connectionString = CONNECTION.endsWith('/') 
-      ? CONNECTION + 'socialsphere'
-      : CONNECTION + '/socialsphere';
-  }
-  
-  // Mask credentials in log
-  // const maskedConnection = connectionString.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
-  // console.log("📝 Using connection:", maskedConnection);
+  logger.error("❌ CRITICAL: MONGO_URI is not set in environment variables! Please add MONGO_URI in your Render Dashboard under Environment.");
 } else {
-  // Mask credentials in log
-  // const maskedConnection = CONNECTION.replace(/\/\/[^:]+:[^@]+@/, '//***:***@');
-  // console.log("📝 Connecting to:", maskedConnection);
-}
+  // Check if connection string has a database name
+  let connectionString = CONNECTION;
+  const hasDbName = /mongodb\+?srv?:\/\/[^/]+\/[^/?]+/.test(CONNECTION);
 
-// Connect to MongoDB
-mongoose
-  .connect(connectionString, { 
-    useNewUrlParser: true, 
-    useUnifiedTopology: true
-  })
-  .then(() => {
-    logger.info("MongoDB connected successfully", {
-      database: mongoose.connection.db?.databaseName || "Connected",
-      host: mongoose.connection.host || "Connected"
-    });
-    
-    // Start server only after successful connection
-    app.listen(PORT, () => {
-      logger.info(`Server listening at Port ${PORT}`, { port: PORT, env: process.env.NODE_ENV || 'development' });
-    });
-  })
-  .catch((error) => {
-    logger.error("MongoDB connection error", { 
-      error: error.message,
-      stack: error.stack
-    });
-    logger.error("Troubleshooting tips: Check MONGO_URI, IP whitelist, credentials, and internet connection");
-    process.exit(1);
-  });
+  if (!hasDbName) {
+    if (CONNECTION.includes('?')) {
+      connectionString = CONNECTION.includes('/?')
+        ? CONNECTION.replace(/\/\?/, '/socialsphere?')
+        : CONNECTION.replace(/\?/, '/socialsphere?');
+    } else {
+      connectionString = CONNECTION.endsWith('/')
+        ? CONNECTION + 'socialsphere'
+        : CONNECTION + '/socialsphere';
+    }
+  }
+
+  // Connect to MongoDB with automatic retry
+  const connectWithRetry = () => {
+    logger.info("Attempting MongoDB connection...");
+    mongoose
+      .connect(connectionString, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+        serverSelectionTimeoutMS: 15000,
+      })
+      .then(() => {
+        logger.info("MongoDB connected successfully", {
+          database: mongoose.connection.db?.databaseName || "Connected",
+          host: mongoose.connection.host || "Connected"
+        });
+      })
+      .catch((error) => {
+        logger.error("MongoDB connection error", {
+          error: error.message,
+        });
+        logger.error("Troubleshooting: Check Render Environment variables (MONGO_URI) and Atlas IP Access List (allow 0.0.0.0/0). Retrying in 10 seconds...");
+        setTimeout(connectWithRetry, 10000);
+      });
+  };
+
+  connectWithRetry();
+}
 
 // Connection event listeners
 mongoose.connection.on('disconnected', () => {
@@ -239,5 +231,5 @@ mongoose.connection.on('disconnected', () => {
 });
 
 mongoose.connection.on('error', (err) => {
-  logger.error("MongoDB error", { error: err.message, stack: err.stack });
+  logger.error("MongoDB error", { error: err.message });
 });
