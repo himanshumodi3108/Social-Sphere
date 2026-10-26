@@ -89,6 +89,9 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+    build: {
+      outDir: 'dist',
+    },
     envPrefix: ['VITE_', 'REACT_APP_'],
     define: {
       'process.env': {
