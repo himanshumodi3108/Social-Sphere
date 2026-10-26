@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { viewStory, reactToStory } from "../../api/StoryRequests";
 import Avatar from "../Avatar/Avatar";
@@ -226,7 +227,12 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
 
         {/* Header */}
         <div className="story-header">
-          <div className="story-user-info">
+          <Link
+            to={currentStoryGroup?.user?._id ? `/profile/${currentStoryGroup.user._id}` : '#'}
+            onClick={onClose}
+            className="story-user-info"
+            style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer' }}
+          >
             <Avatar
               profilePicture={currentStoryGroup.user.profilePicture}
               firstname={currentStoryGroup.user.name?.split(' ')[0]}
@@ -245,7 +251,7 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
                 })}
               </span>
             </div>
-          </div>
+          </Link>
           <button className="story-close-btn" onClick={onClose}>
             <UilTimes size="24" />
           </button>

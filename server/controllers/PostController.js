@@ -1,9 +1,10 @@
 import PostModel from "../models/postModel.js";
 import UserModel from "../models/userModel.js";
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 import logger from "../utils/logger.js";
 import { getPaginationParams, createPaginationResponse } from "../utils/pagination.js";
-import { createNotification } from "./NotificationController.js";
+import { createNotification, createBatchNotifications } from "./NotificationController.js";
 
 // Import socket.io dynamically to avoid starting the socket server on import
 let io = null;
@@ -19,6 +20,182 @@ const getSocketIO = async () => {
   return io;
 };
 
+// Reusable aggregation pipeline stages for populating post author & comment authors
+const getPostLookupStages = () => [
+  // Lookup author information (backwards compatible with string and ObjectId)
+  {
+    $lookup: {
+      from: 'users',
+      let: { postUserId: '$userId' },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $or: [
+                { $eq: ['$_id', '$$postUserId'] },
+                { $eq: [{ $toString: '$_id' }, { $toString: '$$postUserId' }] }
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            firstname: 1,
+            lastname: 1,
+            username: 1,
+            profilePicture: 1
+          }
+        }
+      ],
+      as: 'author'
+    }
+  },
+  {
+    $unwind: {
+      path: '$author',
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  // Add author fields
+  {
+    $addFields: {
+      authorName: {
+        $cond: {
+          if: { $and: ['$author.firstname', '$author.lastname'] },
+          then: { $concat: ['$author.firstname', ' ', '$author.lastname'] },
+          else: { $ifNull: ['$author.firstname', { $ifNull: ['$author.lastname', 'Unknown User'] }] }
+        }
+      },
+      authorUsername: { $ifNull: ['$author.username', 'Unknown User'] },
+      authorProfilePicture: { $ifNull: ['$author.profilePicture', null] }
+    }
+  },
+  // Lookup comment authors
+  {
+    $lookup: {
+      from: 'users',
+      let: { commentUserIds: '$comments.userId' },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $in: [
+                { $toString: '$_id' },
+                {
+                  $map: {
+                    input: { $ifNull: ['$$commentUserIds', []] },
+                    as: 'id',
+                    in: { $toString: '$$id' }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            firstname: 1,
+            lastname: 1,
+            username: 1,
+            profilePicture: 1
+          }
+        }
+      ],
+      as: 'commentAuthors'
+    }
+  },
+  // Process comments with author info
+  {
+    $addFields: {
+      comments: {
+        $map: {
+          input: { $ifNull: ['$comments', []] },
+          as: 'comment',
+          in: {
+            $mergeObjects: [
+              '$$comment',
+              {
+                $let: {
+                  vars: {
+                    author: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: { $ifNull: ['$commentAuthors', []] },
+                            as: 'author',
+                            cond: { $eq: [{ $toString: '$$author._id' }, { $toString: '$$comment.userId' }] }
+                          }
+                        },
+                        0
+                      ]
+                    }
+                  },
+                  in: {
+                    authorName: {
+                      $cond: {
+                        if: { $and: ['$$author.firstname', '$$author.lastname'] },
+                        then: { $concat: ['$$author.firstname', ' ', '$$author.lastname'] },
+                        else: { $ifNull: ['$$author.firstname', { $ifNull: ['$$author.lastname', 'Unknown User'] }] }
+                      }
+                    },
+                    authorUsername: { $ifNull: ['$$author.username', 'Unknown User'] },
+                    authorProfilePicture: { $ifNull: ['$$author.profilePicture', null] },
+                    likes: { $ifNull: ['$$comment.likes', []] }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  // Lookup liked users (top 5 for avatars/names, eliminating frontend N+1 requests)
+  {
+    $lookup: {
+      from: 'users',
+      let: { postLikes: { $slice: [{ $ifNull: ['$likes', []] }, 5] } },
+      pipeline: [
+        {
+          $match: {
+            $expr: {
+              $in: [
+                { $toString: '$_id' },
+                {
+                  $map: {
+                    input: { $ifNull: ['$$postLikes', []] },
+                    as: 'id',
+                    in: { $toString: '$$id' }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          $project: {
+            _id: 1,
+            firstname: 1,
+            lastname: 1,
+            username: 1,
+            profilePicture: 1
+          }
+        }
+      ],
+      as: 'likedByUsers'
+    }
+  },
+  // Ensure arrays are always arrays
+  {
+    $addFields: {
+      likes: { $ifNull: ['$likes', []] },
+      comments: { $ifNull: ['$comments', []] },
+      likedByUsers: { $ifNull: ['$likedByUsers', []] }
+    }
+  }
+];
+
 // creating a post
 export const createPost = async (req, res) => {
   try {
@@ -30,7 +207,7 @@ export const createPost = async (req, res) => {
     const { _id, ...bodyWithoutId } = req.body;
     
     const postData = {
-      userId: String(bodyWithoutId.userId),
+      userId: bodyWithoutId.userId,
       desc: bodyWithoutId.desc || '',
       privacy: bodyWithoutId.privacy || 'public',
       likes: [],
@@ -96,43 +273,7 @@ export const createPost = async (req, res) => {
     // Populate author information using aggregation
     const postWithAuthor = await PostModel.aggregate([
       { $match: { _id: savedPost._id } },
-      {
-        $lookup: {
-          from: 'users',
-          let: { userId: { $toString: '$userId' } },
-          pipeline: [
-            { $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$userId'] } } },
-            {
-              $project: {
-                firstname: 1,
-                lastname: 1,
-                username: 1,
-                profilePicture: 1
-              }
-            }
-          ],
-          as: 'author'
-        }
-      },
-      {
-        $unwind: {
-          path: '$author',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      {
-        $addFields: {
-          authorName: {
-            $cond: {
-              if: { $and: ['$author.firstname', '$author.lastname'] },
-              then: { $concat: ['$author.firstname', ' ', '$author.lastname'] },
-              else: { $ifNull: ['$author.firstname', { $ifNull: ['$author.lastname', 'Unknown User'] }] }
-            }
-          },
-          authorUsername: { $ifNull: ['$author.username', 'Unknown User'] },
-          authorProfilePicture: { $ifNull: ['$author.profilePicture', null] }
-        }
-      }
+      ...getPostLookupStages()
     ]);
 
     let finalPost;
@@ -149,29 +290,27 @@ export const createPost = async (req, res) => {
       };
     }
 
-    // Notify followers about the new post via Socket.io and notifications
+    // Notify followers about the new post via Socket.io and batch notifications
     try {
       const author = await UserModel.findById(savedPost.userId).select('followers');
       const followers = (author?.followers || []).map(id => String(id));
       
       // Emit new post event to all followers (only for public and friends posts)
       if (postData.privacy === 'public' || postData.privacy === 'friends') {
-        // Get socket.io instance dynamically
         const socketIO = await getSocketIO();
         if (socketIO) {
-          // Emit to all connected clients - they will filter on the client side
           socketIO.emit('new-post', {
             post: finalPost,
             authorId: savedPost.userId
           });
         }
         
-        // Create notifications for all followers
-        for (const followerId of followers) {
-          await createNotification(followerId, 'post', savedPost.userId, { postId: String(savedPost._id) });
+        // Batch create notifications for all followers
+        if (followers.length > 0) {
+          await createBatchNotifications(followers, 'post', savedPost.userId, { postId: String(savedPost._id) });
         }
         
-        logger.info("New post event emitted and notifications created", { 
+        logger.info("New post event emitted and batch notifications created", { 
           postId: savedPost._id, 
           authorId: savedPost.userId,
           followerCount: followers.length 
@@ -191,16 +330,24 @@ export const createPost = async (req, res) => {
   }
 };
 
-// get a post
+// get a single post
 export const getPost = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const post = await PostModel.findById(id);
-    if (!post) {
+    const postObjectId = mongoose.Types.ObjectId.isValid(id) ? new mongoose.Types.ObjectId(id) : null;
+    const matchId = postObjectId ? { $in: [id, postObjectId] } : id;
+
+    const posts = await PostModel.aggregate([
+      { $match: { _id: matchId } },
+      ...getPostLookupStages()
+    ]);
+
+    if (!posts || posts.length === 0) {
       return res.status(404).json({ message: "Post not found" });
     }
-    res.status(200).json(post);
+
+    res.status(200).json(posts[0]);
   } catch (error) {
     logger.error("Error fetching post", { error: error.message, postId: id });
     res.status(500).json({ message: error.message || "Failed to fetch post" });
@@ -242,8 +389,12 @@ export const updatePost = async (req, res) => {
     
     logger.info("Post updated successfully", { postId, userId });
     
-    const updatedPost = await PostModel.findById(postId);
-    res.status(200).json(updatedPost);
+    const updatedPosts = await PostModel.aggregate([
+      { $match: { _id: post._id } },
+      ...getPostLookupStages()
+    ]);
+
+    res.status(200).json(updatedPosts[0] || post);
   } catch (error) {
     logger.error("Error updating post", { error: error.message, postId, userId });
     res.status(500).json({ message: error.message || "Failed to update post" });
@@ -325,7 +476,7 @@ export const likePost = async (req, res) => {
   }
 };
 
-// Get timeline posts - Optimized with aggregation and pagination
+// Get timeline posts - Optimized with aggregation and pagination ($skip/$limit before $lookup)
 export const getTimelinePosts = async (req, res) => {
   const userId = req.params.id;
   const { page, limit, skip } = getPaginationParams(req);
@@ -342,154 +493,36 @@ export const getTimelinePosts = async (req, res) => {
     // Build user IDs array (current user + following)
     const userIds = [String(userId), ...followingIds];
 
+    const currentUserIdStr = String(userId);
+    const currentUserIdObj = mongoose.Types.ObjectId.isValid(userId) ? new mongoose.Types.ObjectId(userId) : null;
+    const userIdsObj = userIds.filter(id => mongoose.Types.ObjectId.isValid(id)).map(id => new mongoose.Types.ObjectId(id));
+    const userIdsCombined = [...userIds, ...userIdsObj];
+    const selfCombined = currentUserIdObj ? [currentUserIdStr, currentUserIdObj] : [currentUserIdStr];
+
+    const matchCriteria = {
+      $or: [
+        {
+          userId: { $in: userIdsCombined },
+          privacy: { $in: ['public', 'friends'] }
+        },
+        {
+          userId: { $in: selfCombined },
+          privacy: 'private'
+        }
+      ]
+    };
+
+    // Fast count using indexed query (avoids running expensive pipeline on entire collection)
+    const total = await PostModel.countDocuments(matchCriteria);
+
+    // Optimized pipeline: match and sort, THEN skip and limit, THEN lookup only the paginated slice
     const pipeline = [
-      {
-        $match: {
-          $or: [
-            {
-              userId: { $in: userIds },
-              privacy: 'public'
-            },
-            {
-              userId: { $in: userIds },
-              privacy: 'friends'
-            },
-            {
-              userId: String(userId),
-              privacy: 'private'
-            }
-          ]
-        }
-      },
-      // Sort by createdAt descending
+      { $match: matchCriteria },
       { $sort: { createdAt: -1 } },
-      // Lookup author information
-      {
-        $lookup: {
-          from: 'users',
-          let: { userId: { $toString: '$userId' } },
-          pipeline: [
-            { $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$userId'] } } },
-            {
-              $project: {
-                firstname: 1,
-                lastname: 1,
-                username: 1,
-                profilePicture: 1
-              }
-            }
-          ],
-          as: 'author'
-        }
-      },
-      {
-        $unwind: {
-          path: '$author',
-          preserveNullAndEmptyArrays: true
-        }
-      },
-      // Add author fields
-      {
-        $addFields: {
-          authorName: {
-            $cond: {
-              if: { $and: ['$author.firstname', '$author.lastname'] },
-              then: { $concat: ['$author.firstname', ' ', '$author.lastname'] },
-              else: { $ifNull: ['$author.firstname', { $ifNull: ['$author.lastname', 'Unknown User'] }] }
-            }
-          },
-          authorUsername: { $ifNull: ['$author.username', 'Unknown User'] },
-          authorProfilePicture: { $ifNull: ['$author.profilePicture', null] }
-        }
-      },
-      // Lookup comment authors
-      {
-        $lookup: {
-          from: 'users',
-          let: { commentUserIds: '$comments.userId' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $in: [{ $toString: '$_id' }, { $map: { input: '$$commentUserIds', as: 'id', in: { $toString: '$$id' } } }]
-                }
-              }
-            },
-            {
-              $project: {
-                _id: 1,
-                firstname: 1,
-                lastname: 1,
-                username: 1,
-                profilePicture: 1
-              }
-            }
-          ],
-          as: 'commentAuthors'
-        }
-      },
-      // Process comments with author info
-      {
-        $addFields: {
-          comments: {
-            $map: {
-              input: '$comments',
-              as: 'comment',
-              in: {
-                $mergeObjects: [
-                  '$$comment',
-                  {
-                    $let: {
-                      vars: {
-                        author: {
-                          $arrayElemAt: [
-                            {
-                              $filter: {
-                                input: '$commentAuthors',
-                                as: 'author',
-                                cond: { $eq: [{ $toString: '$$author._id' }, { $toString: '$$comment.userId' }] }
-                              }
-                            },
-                            0
-                          ]
-                        }
-                      },
-                      in: {
-                        authorName: {
-                          $cond: {
-                            if: { $and: ['$$author.firstname', '$$author.lastname'] },
-                            then: { $concat: ['$$author.firstname', ' ', '$$author.lastname'] },
-                            else: { $ifNull: ['$$author.firstname', { $ifNull: ['$$author.lastname', 'Unknown User'] }] }
-                          }
-                        },
-                        authorUsername: { $ifNull: ['$$author.username', 'Unknown User'] },
-                        authorProfilePicture: { $ifNull: ['$$author.profilePicture', null] },
-                        likes: { $ifNull: ['$$comment.likes', []] }
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          }
-        }
-      },
-      // Ensure arrays are always arrays
-      {
-        $addFields: {
-          likes: { $ifNull: ['$likes', []] },
-          comments: { $ifNull: ['$comments', []] }
-        }
-      }
+      { $skip: skip },
+      { $limit: limit },
+      ...getPostLookupStages()
     ];
-
-    // Get total count for pagination
-    const countPipeline = [...pipeline, { $count: 'total' }];
-    const countResult = await PostModel.aggregate(countPipeline);
-    const total = countResult[0]?.total || 0;
-
-    // Add pagination
-    pipeline.push({ $skip: skip }, { $limit: limit });
 
     // Execute aggregation
     const posts = await PostModel.aggregate(pipeline);
@@ -500,6 +533,83 @@ export const getTimelinePosts = async (req, res) => {
   } catch (error) {
     logger.error("Error fetching timeline posts", { error: error.message, stack: error.stack, userId });
     res.status(500).json({ message: error.message || "Failed to fetch timeline posts" });
+  }
+};
+
+// Get dedicated user posts - Optimized with pagination and privacy checks
+export const getUserPosts = async (req, res) => {
+  const targetUserId = req.params.id;
+  const { page, limit, skip } = getPaginationParams(req);
+
+  try {
+    if (!targetUserId) {
+      return res.status(400).json({ message: "User ID is required" });
+    }
+
+    // Try to get authenticated viewer id
+    let viewerId = req.userId;
+    if (!viewerId && req.headers.authorization) {
+      try {
+        const token = req.headers.authorization.split(" ")[1];
+        if (token) {
+          const decoded = jwt.verify(token, process.env.JWTKEY);
+          viewerId = decoded?.id;
+        }
+      } catch (err) {
+        // Unauthenticated or expired token - proceed as guest
+      }
+    }
+
+    const isOwner = viewerId && String(viewerId) === String(targetUserId);
+
+    let allowedPrivacies = ['public'];
+    if (isOwner) {
+      allowedPrivacies = ['public', 'friends', 'private'];
+    } else {
+      const targetUser = await UserModel.findById(targetUserId).select('followers following');
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isFriend = viewerId && (
+        (targetUser.followers || []).some(id => String(id) === String(viewerId)) ||
+        (targetUser.following || []).some(id => String(id) === String(viewerId))
+      );
+
+      if (isFriend) {
+        allowedPrivacies = ['public', 'friends'];
+      }
+    }
+
+    const targetIdStr = String(targetUserId);
+    const targetIdObj = mongoose.Types.ObjectId.isValid(targetUserId) ? new mongoose.Types.ObjectId(targetUserId) : null;
+    const userMatch = targetIdObj ? { $in: [targetIdStr, targetIdObj] } : targetIdStr;
+
+    const matchCriteria = {
+      userId: userMatch,
+      privacy: { $in: allowedPrivacies }
+    };
+
+    // Fast count using indexed query
+    const total = await PostModel.countDocuments(matchCriteria);
+
+    // Optimized pipeline: match and sort, THEN skip and limit, THEN lookup
+    const pipeline = [
+      { $match: matchCriteria },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      ...getPostLookupStages()
+    ];
+
+    const posts = await PostModel.aggregate(pipeline);
+
+    logger.info("User posts fetched", { targetUserId, viewerId, count: posts.length, page, limit });
+
+    res.status(200).json(createPaginationResponse(posts, total, page, limit));
+  } catch (error) {
+    logger.error("Error fetching user posts", { error: error.message, stack: error.stack, targetUserId });
+    res.status(500).json({ message: error.message || "Failed to fetch user posts" });
   }
 };
 
@@ -540,9 +650,18 @@ export const addComment = async (req, res) => {
       {
         $lookup: {
           from: 'users',
-          let: { userId: { $toString: '$comments.userId' } },
+          let: { userId: '$comments.userId' },
           pipeline: [
-            { $match: { $expr: { $eq: [{ $toString: '$_id' }, '$$userId'] } } },
+            {
+              $match: {
+                $expr: {
+                  $or: [
+                    { $eq: ['$_id', '$$userId'] },
+                    { $eq: [{ $toString: '$_id' }, { $toString: '$$userId' }] }
+                  ]
+                }
+              }
+            },
             {
               $project: {
                 firstname: 1,
@@ -580,6 +699,11 @@ export const addComment = async (req, res) => {
         }
       }
     ]);
+
+    // Send notification to post author if commenter is not post author
+    if (String(post.userId) !== String(userId)) {
+      await createNotification(post.userId, 'comment', userId, { postId: String(post._id) });
+    }
 
     if (commentWithAuthor && commentWithAuthor.length > 0) {
       res.status(200).json(commentWithAuthor[0]);

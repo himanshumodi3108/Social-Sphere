@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { useEffect, Suspense, lazy } from "react";
 import * as UserApi from "./api/UserRequests";
+import MobileNav from "./components/MobileNav/MobileNav";
 
 // Code splitting with React.lazy
 const Landing = lazy(() => import("./pages/Landing/Landing"));
@@ -127,28 +128,30 @@ function App() {
             path="/groups/:id"
             element={user ? <GroupDetail /> : <Navigate to="../landing" />}
           />
-              <Route
-                path="/saved"
-                element={user ? <SavedPosts /> : <Navigate to="../landing" />}
-              />
-              <Route
-                path="/privacy-settings"
-                element={user ? <PrivacySettings /> : <Navigate to="../landing" />}
-              />
-              <Route
-                path="/notification-settings"
-                element={user ? <NotificationSettings /> : <Navigate to="../landing" />}
-              />
-              <Route
-                path="*"
-                element={
-                  <main style={{ padding: "1rem" }}>
-                    <p>There's nothing here!</p>
-                  </main>
-                }
-              />
+          <Route
+            path="/saved"
+            element={user ? <SavedPosts /> : <Navigate to="../landing" />}
+          />
+          <Route
+            path="/privacy-settings"
+            element={user ? <PrivacySettings /> : <Navigate to="../landing" />}
+          />
+          <Route
+            path="/notification-settings"
+            element={user ? <NotificationSettings /> : <Navigate to="../landing" />}
+          />
+          <Route
+            path="*"
+            element={
+              <main style={{ padding: "1rem" }}>
+                <p>There's nothing here!</p>
+              </main>
+            }
+          />
         </Routes>
       </Suspense>
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileNav />
     </div>
   );
 }

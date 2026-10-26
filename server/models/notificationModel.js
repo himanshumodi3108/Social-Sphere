@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const notificationSchema = mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
       required: true,
       index: true,
     },
@@ -13,24 +14,29 @@ const notificationSchema = mongoose.Schema(
       enum: ['like', 'comment', 'follow', 'mention', 'post', 'group_invite', 'group_post', 'message', 'story'],
     },
     fromUserId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
       required: true,
+      index: true,
     },
     postId: {
-      type: String,
-      sparse: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Posts",
+      default: null,
     },
     commentId: {
       type: String,
-      sparse: true,
+      default: null,
     },
     groupId: {
-      type: String,
-      sparse: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
     },
     chatId: {
-      type: String,
-      sparse: true,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+      default: null,
     },
     message: {
       type: String,
@@ -55,4 +61,3 @@ notificationSchema.index({ userId: 1, createdAt: -1 });
 
 const NotificationModel = mongoose.model("Notifications", notificationSchema);
 export default NotificationModel;
-

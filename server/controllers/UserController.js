@@ -29,7 +29,7 @@ export const getUser = async (req, res) => {
     }
     
     if (user) {
-      const { password, ...otherDetails } = user._doc;
+      const { password, ...otherDetails } = user._doc || user;
       
       // Clean up followers and following arrays
       if (Array.isArray(otherDetails.followers)) {
@@ -37,6 +37,30 @@ export const getUser = async (req, res) => {
       }
       if (Array.isArray(otherDetails.following)) {
         otherDetails.following = otherDetails.following.filter(f => f !== null && f !== undefined && f !== '');
+      }
+
+      // Check requesting viewer identity
+      let currentUserId = req.userId;
+      if (!currentUserId && req.headers.authorization) {
+        try {
+          const token = req.headers.authorization.split(" ")[1];
+          if (token) {
+            const decoded = jwt.verify(token, process.env.JWTKEY);
+            currentUserId = decoded?.id;
+          }
+        } catch (e) {
+          // ignore invalid or expired token
+        }
+      }
+
+      const isSelf = currentUserId && String(currentUserId) === String(user._id);
+
+      // Redact sensitive PII and SPII for third-party viewers
+      if (!isSelf) {
+        delete otherDetails.email;
+        delete otherDetails.emailVerified;
+        delete otherDetails.blocked;
+        delete otherDetails.savedPosts;
       }
       
       res.status(200).json(otherDetails);
@@ -100,7 +124,7 @@ export const getAllUsers = async (req, res) => {
 
     // Fetch users with pagination - use lean() for better performance
     let users = await UserModel.find(query)
-      .select('-password -email -emailVerified -savedPosts')
+      .select('-password -email -emailVerified -blocked -savedPosts')
       .skip(skip)
       .limit(limit)
       .lean();

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { addMember, removeMember, makeMemberAdmin } from "../../api/GroupRequests";
 import { searchUsers } from "../../api/UserRequests";
@@ -141,19 +142,24 @@ const GroupMemberManagement = ({ group, onUpdate }) => {
             <div className="search-results">
               {searchResults.map((userResult) => (
                 <div key={userResult._id} className="search-result-item">
-                  <Avatar
-                    profilePicture={userResult.profilePicture}
-                    firstname={userResult.firstname}
-                    lastname={userResult.lastname}
-                    username={userResult.username}
-                    size="40px"
-                  />
-                  <div className="user-info">
-                    <span className="user-name">
-                      {userResult.firstname} {userResult.lastname}
-                    </span>
-                    <span className="user-username">@{userResult.username}</span>
-                  </div>
+                  <Link 
+                    to={`/profile/${userResult._id}`}
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}
+                  >
+                    <Avatar
+                      profilePicture={userResult.profilePicture}
+                      firstname={userResult.firstname}
+                      lastname={userResult.lastname}
+                      username={userResult.username}
+                      size="40px"
+                    />
+                    <div className="user-info">
+                      <span className="user-name">
+                        {userResult.firstname} {userResult.lastname}
+                      </span>
+                      <span className="user-username">@{userResult.username}</span>
+                    </div>
+                  </Link>
                   <button
                     className="add-btn"
                     onClick={() => handleAddMember(userResult._id)}
@@ -185,30 +191,35 @@ const GroupMemberManagement = ({ group, onUpdate }) => {
 
           return (
             <div key={memberKey} className="member-management-item">
-              <Avatar
-                profilePicture={member.profilePicture}
-                firstname={member.name?.split(' ')[0]}
-                lastname={member.name?.split(' ').slice(1).join(' ')}
-                username={member.username}
-                size="45px"
-              />
-              <div className="member-info">
-                <div className="member-name-row">
-                  <span className="member-name">{member.name || member.username}</span>
-                  {isMemberCreator && (
-                    <span className="role-badge creator">Creator</span>
-                  )}
-                  {isMemberAdmin && !isMemberCreator && (
-                    <span className="role-badge admin">Admin</span>
-                  )}
-                  {!isMemberAdmin && !isMemberCreator && (
-                    <span className="role-badge member">Member</span>
+              <Link
+                to={`/profile/${member.userId || member._id}`}
+                style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}
+              >
+                <Avatar
+                  profilePicture={member.profilePicture}
+                  firstname={member.name?.split(' ')[0]}
+                  lastname={member.name?.split(' ').slice(1).join(' ')}
+                  username={member.username}
+                  size="45px"
+                />
+                <div className="member-info">
+                  <div className="member-name-row">
+                    <span className="member-name">{member.name || member.username}</span>
+                    {isMemberCreator && (
+                      <span className="role-badge creator">Creator</span>
+                    )}
+                    {isMemberAdmin && !isMemberCreator && (
+                      <span className="role-badge admin">Admin</span>
+                    )}
+                    {!isMemberAdmin && !isMemberCreator && (
+                      <span className="role-badge member">Member</span>
+                    )}
+                  </div>
+                  {member.username && (
+                    <span className="member-username">@{member.username}</span>
                   )}
                 </div>
-                {member.username && (
-                  <span className="member-username">@{member.username}</span>
-                )}
-              </div>
+              </Link>
               <div className="member-actions">
                 {canPromote && (
                   <button

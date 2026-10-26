@@ -14,9 +14,13 @@
     align-items: center;
 }
 
-.follower>div{
+.follower>div,
+.follower>a{
     display: flex;
     gap: 10px;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
 }
 
 

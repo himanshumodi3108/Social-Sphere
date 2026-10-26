@@ -4,40 +4,36 @@ import "./GroupChatBox.css";
 import { format } from "timeago.js";
 import InputEmoji from 'react-input-emoji';
 import Avatar from "../Avatar/Avatar";
-import { io } from "socket.io-client";
+import { useSocket } from "../../context/SocketContext";
 import { UilUsersAlt } from "@iconscout/react-unicons";
 
 const GroupChatBox = ({ groupId, currentUser, groupName }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [socket, setSocket] = useState(null);
   const [receivedMessage, setReceivedMessage] = useState(null);
   const scroll = useRef();
+  const { socket } = useSocket();
 
-  // Initialize socket connection
+  // Join group chat room on centralized socket
   useEffect(() => {
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || "http://localhost:8800";
-    const newSocket = io(socketUrl);
-    setSocket(newSocket);
+    if (!socket || !groupId) return;
 
-    // Join group chat room
-    if (groupId) {
-      newSocket.emit("join-group-chat", groupId);
-    }
+    socket.emit("join-group-chat", groupId);
 
-    // Listen for new group messages
-    newSocket.on("receive-group-message", (data) => {
+    const handleGroupMessage = (data) => {
       if (data.groupId === groupId) {
         setReceivedMessage(data);
       }
-    });
+    };
+
+    socket.on("receive-group-message", handleGroupMessage);
 
     return () => {
-      newSocket.emit("leave-group-chat", groupId);
-      newSocket.disconnect();
+      socket.emit("leave-group-chat", groupId);
+      socket.off("receive-group-message", handleGroupMessage);
     };
-  }, [groupId]);
+  }, [socket, groupId]);
 
   // Handle received messages - prevent duplicates
   useEffect(() => {
@@ -47,7 +43,7 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
           (msg) => msg._id === receivedMessage._id || 
           (msg.senderId === receivedMessage.senderId && 
            msg.text === receivedMessage.text && 
-           Math.abs(new Date(msg.createdAt) - new Date(receivedMessage.createdAt)) < 1000)
+           Math.abs(new Date(msg.createdAt || Date.now()) - new Date(receivedMessage.createdAt || Date.now())) < 1000)
         );
         if (messageExists) {
           return prev;

@@ -56,7 +56,7 @@ export const search = async (req, res) => {
     if (!type || type === 'users' || type === 'all') {
       userTotal = await UserModel.countDocuments(userQuery);
       users = await UserModel.find(userQuery)
-        .select("-password")
+        .select("-password -email -emailVerified -blocked -savedPosts")
         .skip(skip)
         .limit(limit)
         .lean();

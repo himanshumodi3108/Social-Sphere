@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { followUser, unfollowUser } from "../../actions/UserAction";
 import Avatar from "../Avatar/Avatar";
@@ -62,7 +63,10 @@ const User = ({ person }) => {
   
   return (
     <div className="follower">
-      <div>
+      <Link 
+        to={`/profile/${person._id}`}
+        style={{ textDecoration: 'none', color: 'inherit', display: 'flex', gap: '10px', alignItems: 'center' }}
+      >
         <Avatar
           user={person}
           profilePicture={person.profilePicture}
@@ -76,7 +80,7 @@ const User = ({ person }) => {
           <span>{person.firstname} {person.lastname}</span>
           <span>@{person.username}</span>
         </div>
-      </div>
+      </Link>
       <button
         className={
           following ? "button fc-button UnfollowButton" : "button fc-button"

@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ChatBox from "../../components/ChatBox/ChatBox";
 import GroupChatBox from "../../components/GroupChatBox/GroupChatBox";
 import Conversation from "../../components/Coversation/Conversation";
@@ -6,28 +6,27 @@ import LogoSearch from "../../components/LogoSearch/LogoSearch";
 import NavIcons from "../../components/NavIcons/NavIcons";
 import "./Chat.css";
 import { userChats } from "../../api/ChatRequests";
-import { useDispatch, useSelector } from "react-redux";
-import { io } from "socket.io-client";
+import { useSelector } from "react-redux";
+import { useSocket } from "../../context/SocketContext";
 
 const Chat = () => {
-  const dispatch = useDispatch();
-  const socket = useRef();
   const { user } = useSelector((state) => state.authReducer.authData);
+  const { socket, onlineUsers } = useSocket();
 
   const [chats, setChats] = useState([]);
-  const [onlineUsers, setOnlineUsers] = useState([]);
   const [currentChat, setCurrentChat] = useState(null);
   const [sendMessage, setSendMessage] = useState(null);
   const [receivedMessage, setReceivedMessage] = useState(null);
 
-  // **Fix: Cleanup function to prevent state update on unmounted component**
   useEffect(() => {
     let isMounted = true;
 
     const getChats = async () => {
       try {
-        const { data } = await userChats(user._id);
-        if (isMounted) setChats(data); // ✅ Only update state if component is mounted
+        if (user?._id) {
+          const { data } = await userChats(user._id);
+          if (isMounted) setChats(data);
+        }
       } catch (error) {
         // console.log(error);
       }
@@ -36,69 +35,52 @@ const Chat = () => {
     getChats();
 
     return () => {
-      isMounted = false; // Cleanup on component unmount
+      isMounted = false;
     };
-  }, [user._id]);
+  }, [user?._id]);
 
-  // Connect to Socket.io
+  // Send message to socket server via centralized SocketContext
   useEffect(() => {
-    // Use environment variable for socket URL, fallback to localhost for development
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || "http://localhost:8800";
-    socket.current = io(socketUrl);
-    socket.current.emit("new-user-add", user._id);
-    socket.current.on("get-users", (users) => {
-      setOnlineUsers(users);
-    });
-
-    return () => {
-      socket.current.disconnect(); // ✅ Cleanup socket connection
-    };
-  }, [user]);
-
-  // Send Message to socket server
-  useEffect(() => {
-    if (sendMessage !== null) {
-      socket.current.emit("send-message", sendMessage);
+    if (sendMessage !== null && socket) {
+      socket.emit("send-message", sendMessage);
     }
-  }, [sendMessage]);
+  }, [sendMessage, socket]);
 
-  // Get the message from socket server (for individual chats)
+  // Receive message from socket server for individual chats
   useEffect(() => {
+    if (!socket) return;
+
     const handleReceiveMessage = (data) => {
-      // console.log(data);
-      // Only handle individual chat messages here
       if (currentChat && currentChat.type !== 'group') {
         setReceivedMessage(data);
       }
     };
 
-    socket.current.on("recieve-message", handleReceiveMessage);
+    socket.on("recieve-message", handleReceiveMessage);
 
     return () => {
-      socket.current.off("recieve-message", handleReceiveMessage); // ✅ Cleanup socket listener
+      socket.off("recieve-message", handleReceiveMessage);
     };
-  }, [currentChat]);
+  }, [socket, currentChat]);
 
   const checkOnlineStatus = (chat) => {
-    // Groups don't have online status
     if (chat.type === 'group') {
       return false;
     }
-    const chatMember = chat.members.find((member) => member !== user._id);
-    const online = onlineUsers.find((user) => user.userId === chatMember);
-    return online ? true : false;
+    const chatMember = chat.members?.find((member) => member !== user._id);
+    return onlineUsers.some((u) => u.userId === chatMember);
   };
 
   return (
     <div className="Chat">
       {/* Left Side */}
-      <div className="Left-side-chat" >
-      <div className="hide-in-mobile">
+      <div className="Left-side-chat">
+        <div className="hide-in-mobile">
           <LogoSearch />
         </div>
-        <div className="Chat-container" style={{overflowX:"hidden"}}>
+        <div className="Chat-container" style={{ overflowX: "hidden" }}>
           <h3 className="yep">Chats</h3>
-          <div className="Chat-list" >
+          <div className="Chat-list">
             {chats.map((chat) => (
               <div
                 key={chat._id}
@@ -122,26 +104,26 @@ const Chat = () => {
       </div>
 
       {/* Right Side */}
-      <div className="Right-side-chat" >
-        <div className="nav-icons-container" >
+      <div className="Right-side-chat">
+        <div className="nav-icons-container">
           <NavIcons />
         </div>
 
         <div className="chatbox-wrapper">
-        {currentChat?.type === 'group' ? (
-          <GroupChatBox
-            groupId={currentChat.groupId}
-            currentUser={user._id}
-            groupName={currentChat.name}
-          />
-        ) : (
-          <ChatBox
-            chat={currentChat}
-            currentUser={user._id}
-            setSendMessage={setSendMessage}
-            receivedMessage={receivedMessage}
-          />
-        )}
+          {currentChat?.type === 'group' ? (
+            <GroupChatBox
+              groupId={currentChat.groupId}
+              currentUser={user._id}
+              groupName={currentChat.name}
+            />
+          ) : (
+            <ChatBox
+              chat={currentChat}
+              currentUser={user._id}
+              setSendMessage={setSendMessage}
+              receivedMessage={receivedMessage}
+            />
+          )}
         </div>
       </div>
     </div>

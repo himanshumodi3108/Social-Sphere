@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import { addMessage, getMessages } from "../../api/MessageRequests";
 import { getUser } from "../../api/UserRequests";
 import "./ChatBox.css";
@@ -185,7 +186,11 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
         <>
           {/* Modern Chat Header */}
           <div className="chat-header">
-            <div className="chat-header-user">
+            <Link 
+              to={userData?._id ? `/profile/${userData._id}` : '#'}
+              className="chat-header-user"
+              style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '0.85rem' }}
+            >
               <Avatar
                 user={userData}
                 profilePicture={userData?.profilePicture}
@@ -204,7 +209,7 @@ const ChatBox = ({ chat, currentUser, setSendMessage, receivedMessage }) => {
                   <span className="e2ee-tag">🔒 End-to-end encrypted</span>
                 </span>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Chat Body */}

@@ -9,6 +9,7 @@ import GroupEvents from "../../components/GroupEvents/GroupEvents";
 import GroupChatBox from "../../components/GroupChatBox/GroupChatBox";
 import Avatar from "../../components/Avatar/Avatar";
 import SEO from "../../components/SEO/SEO";
+import NavIcons from "../../components/NavIcons/NavIcons";
 import "./GroupDetail.css";
 import { UilEdit, UilTrashAlt, UilArrowLeft } from "@iconscout/react-unicons";
 
@@ -168,10 +169,15 @@ const GroupDetail = () => {
         description={group?.description || "Join this group on SocialSphere to connect with members, share posts, and participate in group activities."}
         keywords={`${group?.name || "group"}, social group, community, ${group?.privacy || ""}, socialsphere`}
       />
-      <button className="back-button" onClick={() => navigate("/groups")}>
-        <UilArrowLeft size="20" />
-        Back to Groups
-      </button>
+      <div className="group-detail-top-bar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <button className="back-button" onClick={() => navigate("/groups")}>
+          <UilArrowLeft size="20" />
+          Back to Groups
+        </button>
+        <div style={{ width: '320px', maxWidth: '100%' }}>
+          <NavIcons />
+        </div>
+      </div>
 
       {/* Group Header */}
       <div className="group-header">

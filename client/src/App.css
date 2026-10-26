@@ -5,23 +5,56 @@
   --gray: rgba(36, 45, 73, 0.65);
   --profileShadow: 0px 4px 17px 2px rgba(0, 0, 0, 0.25);
   --hrColor: #cfcdcd;
-  --cardColor: rgba(255, 255, 255, 0.64);
+  --cardColor: rgba(255, 255, 255, 0.75);
   --buttonBg: linear-gradient(98.63deg, #f9a225 0%, #f95f35 100%);
   --inputColor: rgba(40, 52, 62, 0.07);
   --photo: #4CB256;
   --video: #4A4EB7;
   --location: #EF5757;
---shedule: #E1AE4A;
+  --shedule: #E1AE4A;
+  --bg-main: #f3f3f3;
+  --text-primary: #242d49;
+  --text-secondary: rgba(36, 45, 73, 0.65);
+  --card-border: rgba(0, 0, 0, 0.06);
+  --bottom-bar-bg: rgba(255, 255, 255, 0.92);
+  --bottom-bar-border: rgba(0, 0, 0, 0.08);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --black: #f0f2f5;
+  --gray: rgba(240, 242, 245, 0.65);
+  --profileShadow: 0px 4px 20px 2px rgba(0, 0, 0, 0.5);
+  --hrColor: #2d3748;
+  --cardColor: #1a202c;
+  --inputColor: rgba(255, 255, 255, 0.07);
+  --bg-main: #0e1217;
+  --text-primary: #f0f2f5;
+  --text-secondary: rgba(240, 242, 245, 0.65);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --bottom-bar-bg: rgba(26, 32, 44, 0.92);
+  --bottom-bar-border: rgba(255, 255, 255, 0.08);
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--black);
+  margin: 0;
+  padding: 0;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 .App {
-
   color: var(--black);
-  background: #f3f3f3;
+  background: var(--bg-main);
+  min-height: 100vh;
   padding: 1rem 1rem;
+  box-sizing: border-box;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-/* blur */
+/* blur decorative circles */
 .blur {
   position: absolute;
   width: 22rem;
@@ -29,6 +62,13 @@
   border-radius: 50%;
   background: #a6ddf0;
   filter: blur(72px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+[data-theme="dark"] .blur {
+  background: #10344d;
+  opacity: 0.35;
 }
 
 .button {
@@ -39,7 +79,8 @@
   border: none;
   border-radius: 0.5rem;
   background: var(--buttonBg);
-  transition: all 100ms ease-out;
+  transition: all 150ms ease-out;
+  font-weight: 600;
 }
 
 .button:hover {
@@ -49,47 +90,62 @@
   background: transparent;
 }
 
-.button:disabled{
+.button:disabled {
   background: silver;
   pointer-events: none;
+  opacity: 0.6;
 }
-
 
 ::-webkit-scrollbar {
-  display: none;
+  width: 6px;
+  height: 6px;
 }
 
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 3px;
+}
 
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 150, 150, 0.5);
+}
 
 /* Form Styling */
-.infoForm{
+.infoForm {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
+  width: 100%;
 }
 
-.infoInput{
-  border: none;
+.infoInput {
+  border: 1px solid var(--card-border);
   outline: none;
   background-color: var(--inputColor);
+  color: var(--black);
   border-radius: 8px;
-  padding: 20px;
-  flex:1;
+  padding: 14px 16px;
+  flex: 1;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, background-color 0.2s;
+  box-sizing: border-box;
 }
 
-.infoForm>div{
+.infoInput:focus {
+  border-color: #0096ff;
+  box-shadow: 0 0 0 3px rgba(0, 150, 255, 0.15);
+}
+
+.infoForm > div {
   display: flex;
   gap: 1rem;
-  height: 2rem;
   width: 90%;
 }
 
-.infoButton{
+.infoButton {
   width: 6rem;
-  height: 2rem;
+  height: 2.2rem;
   align-self: flex-end;
 }
-
-

@@ -5,6 +5,7 @@ import { getGroups, createGroup, joinGroup, leaveGroup } from "../../api/GroupRe
 import { useSelector } from "react-redux";
 import Avatar from "../../components/Avatar/Avatar";
 import SEO from "../../components/SEO/SEO";
+import NavIcons from "../../components/NavIcons/NavIcons";
 import { UilSearch, UilTimes, UilUsersAlt, UilLock, UilUnlock } from "@iconscout/react-unicons";
 
 const Groups = () => {
@@ -107,13 +108,18 @@ const Groups = () => {
         keywords="groups, communities, social groups, join groups, create groups, socialsphere"
       />
       <div className="Groups-header">
-        <h2>Groups</h2>
-        <button 
-          className="create-group-btn"
-          onClick={() => setShowCreateModal(true)}
-        >
-          Create Group
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <h2>Groups</h2>
+          <button 
+            className="create-group-btn"
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create Group
+          </button>
+        </div>
+        <div style={{ width: '320px', maxWidth: '100%' }}>
+          <NavIcons />
+        </div>
       </div>
 
       <div className="Groups-search">

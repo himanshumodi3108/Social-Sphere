@@ -1,29 +1,4 @@
-import axios from "axios";
-import { getBaseUrl } from '../config';
-import store from '../store/ReduxStore';
-
-const API = axios.create({ baseURL: getBaseUrl() });
-
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    req.headers.Authorization = `Bearer ${token}`;
-  }
-  return req;
-});
-
-API.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('profile');
-      store.dispatch({ type: "LOG_OUT" });
-      window.location.href = "/landing";
-    }
-    return Promise.reject(error);
-  }
-);
+import API from './apiClient';
 
 export const createGroup = (data) => API.post('/groups', data);
 
@@ -77,4 +52,3 @@ export const addGroupMessage = (groupId, text) =>
 
 export const getGroupMessages = (groupId, page = 1, limit = 50) => 
   API.get(`/groups/${groupId}/chat/messages?page=${page}&limit=${limit}`);
-

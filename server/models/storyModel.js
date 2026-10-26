@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const storySchema = mongoose.Schema(
   {
     userId: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Users",
       required: true,
       index: true,
     },
@@ -15,10 +16,12 @@ const storySchema = mongoose.Schema(
       type: String,
       maxlength: 200,
     },
-    views: {
-      type: Array,
-      default: [],
-    },
+    views: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Users",
+      },
+    ],
     reactions: {
       type: Array,
       default: [],
@@ -40,4 +43,3 @@ storySchema.index({ expiresAt: 1 });
 
 const StoryModel = mongoose.model("Stories", storySchema);
 export default StoryModel;
-

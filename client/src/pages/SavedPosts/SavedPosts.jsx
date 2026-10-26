@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { getSavedPosts } from "../../api/UserRequests";
 import Posts from "../../components/Posts/Posts";
+import NavIcons from "../../components/NavIcons/NavIcons";
 import "./SavedPosts.css";
 
 const SavedPosts = () => {
@@ -36,9 +37,14 @@ const SavedPosts = () => {
 
   return (
     <div className="SavedPosts">
-      <div className="saved-posts-header">
-        <h2>Saved Posts</h2>
-        <p>Posts you've saved for later</p>
+      <div className="saved-posts-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div>
+          <h2>Saved Posts</h2>
+          <p>Posts you've saved for later</p>
+        </div>
+        <div style={{ width: '320px', maxWidth: '100%' }}>
+          <NavIcons />
+        </div>
       </div>
       {loading && savedPosts.length === 0 ? (
         <div className="loading">Loading saved posts...</div>
@@ -66,4 +72,3 @@ const SavedPosts = () => {
 };
 
 export default SavedPosts;
-

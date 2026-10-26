@@ -3,7 +3,7 @@ import UserModel from "../models/userModel.js";
 import mongoose from "mongoose";
 import logger from "../utils/logger.js";
 import { getPaginationParams, createPaginationResponse } from "../utils/pagination.js";
-import { createNotification } from "./NotificationController.js";
+import { createBatchNotifications } from "./NotificationController.js";
 
 // Create a story
 export const createStory = async (req, res) => {
@@ -34,14 +34,13 @@ export const createStory = async (req, res) => {
 
     logger.info("Story created", { storyId: savedStory._id, userId });
 
-    // Notify followers about the new story
+    // Notify followers about the new story in batch
     try {
       const author = await UserModel.findById(userId).select('followers');
       const followers = (author?.followers || []).map(id => String(id));
       
-      // Create notifications for all followers
-      for (const followerId of followers) {
-        await createNotification(followerId, 'story', userId, {});
+      if (followers.length > 0) {
+        await createBatchNotifications(followers, 'story', userId, {});
       }
       
       logger.info("Story notifications created", { 
@@ -262,4 +261,3 @@ export const deleteStory = async (req, res) => {
     res.status(500).json({ message: error.message || "Failed to delete story" });
   }
 };
-

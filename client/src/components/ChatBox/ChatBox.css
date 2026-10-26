@@ -351,3 +351,51 @@
     justify-content: center;
   }
 }
+
+
+/* Dark Mode Overrides for ChatBox */
+[data-theme="dark"] .chat-header {
+  background: var(--cardColor);
+  border-bottom: 1px solid var(--card-border);
+}
+
+[data-theme="dark"] .chat-header-name {
+  color: var(--black);
+}
+
+[data-theme="dark"] .message.other {
+  background: #232c3d;
+  color: var(--black);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .chat-sender {
+  background: var(--cardColor);
+  border-top: 1px solid var(--card-border);
+}
+
+[data-theme="dark"] .attach-button {
+  background: #232c3d;
+  color: var(--black);
+}
+
+[data-theme="dark"] .attach-button:hover {
+  background: #2d3748;
+}
+
+[data-theme="dark"] .input-emoji-container .react-input-emoji--container {
+  background: #232c3d !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .input-emoji-container .react-input-emoji--input {
+  color: var(--black) !important;
+}
+
+[data-theme="dark"] .chatbox-empty-container {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .chatbox-empty-container h3 {
+  color: var(--black);
+}

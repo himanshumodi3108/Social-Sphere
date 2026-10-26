@@ -1,56 +1,82 @@
 .navIcons {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 1.1rem;
+  justify-content: space-between;
+  gap: 0.3rem;
   background: var(--cardColor);
-  padding: 0.5rem 1.1rem;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
+  transition: background-color 0.25s, border-color 0.25s;
 }
 
 .navIcons > a,
-.navIcons > div {
-  display: flex;
+.navIcons > div,
+.theme-toggle-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  transition: all 0.2s ease;
-  color: #475569;
+  width: 30px;
+  height: 30px;
+  min-width: 28px;
+  max-width: 32px;
+  border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--black);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .navIcons > a:hover,
-.navIcons > div:hover {
-  background: rgba(0, 150, 255, 0.08);
+.navIcons > div:hover,
+.theme-toggle-btn:hover {
+  background: rgba(0, 150, 255, 0.12);
   color: #0096ff;
   transform: translateY(-1px);
 }
 
 .navIcons img {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
   object-fit: contain;
   transition: transform 0.2s ease;
 }
 
 .navIcons svg {
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
   transition: transform 0.2s ease;
 }
 
 @media screen and (max-width: 768px) {
   .navIcons {
-    gap: 0.6rem;
-    padding: 0.35rem 0.65rem;
+    gap: 0.25rem;
+    padding: 0.3rem 0.5rem;
   }
 
   .navIcons > a,
-  .navIcons > div {
-    width: 30px;
-    height: 30px;
+  .navIcons > div,
+  .theme-toggle-btn {
+    width: 28px;
+    height: 28px;
+    min-width: 26px;
+  }
+
+  .navIcons img,
+  .navIcons svg {
+    width: 1rem;
+    height: 1rem;
   }
 }

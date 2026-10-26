@@ -49,3 +49,13 @@
     transform: rotate(360deg);
   }
 }
+
+
+/* Dark Mode Overrides for GroupChatBox */
+[data-theme="dark"] .GroupChatBox-container {
+  border-color: var(--card-border);
+}
+
+[data-theme="dark"] .group-header-icon-badge {
+  background: rgba(0, 150, 255, 0.2);
+}

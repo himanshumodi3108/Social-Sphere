@@ -153,26 +153,14 @@ const Auth = () => {
           )}
 
           {errorMessage && (
-            <span
-              style={{
-                color: "red",
-                fontSize: "12px",
-                alignSelf: "flex-end",
-                marginRight: "5px",
-                display: "block",
-              }}
-            >
-              *{errorMessage}
-            </span>
+            <div className="auth-error-banner">
+              {errorMessage}
+            </div>
           )}
 
           <div>
             <span
-              style={{
-                fontSize: "12px",
-                cursor: "pointer",
-                textDecoration: "underline",
-              }}
+              className="auth-switch-text"
               onClick={() => {
                 resetForm();
                 setIsSignUp((prev) => !prev);

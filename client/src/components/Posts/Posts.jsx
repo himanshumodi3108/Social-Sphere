@@ -1,50 +1,49 @@
-import React, { useEffect, useMemo, useRef } from "react";
-import { getTimelinePosts } from "../../actions/PostsAction";
+import React, { useEffect, useMemo } from "react";
+import { getTimelinePosts, getUserPosts } from "../../actions/PostsAction";
 import Post from "../Post/Post";
 import { useSelector, useDispatch } from "react-redux";
 import "./Posts.css";
 import { useParams } from "react-router-dom";
 import Spinner from "../Spinner/Spinner";
-import { io } from "socket.io-client";
+import { useSocket } from "../../context/SocketContext";
 
 const Posts = ({ posts: externalPosts }) => {
-  const params = useParams()
+  const params = useParams();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.authReducer.authData);
   const { posts, loading } = useSelector((state) => state.postReducer);
-  
-  const socketRef = useRef(null);
+  const { socket } = useSocket();
 
   useEffect(() => {
     // Only fetch if external posts not provided
-    if (user?._id && !externalPosts) {
-      dispatch(getTimelinePosts(user._id));
-    }
-  }, [dispatch, user?._id, externalPosts]);
-
-  // Set up Socket.io listener for new posts from followed users
-  useEffect(() => {
-    if (!user?._id || externalPosts) return; // Don't listen if viewing external posts
-
-    // Connect to socket
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || "http://localhost:8800";
-    socketRef.current = io(socketUrl);
-
-    socketRef.current.on('new-post', (data) => {
-      const { authorId } = data;
-      if (user._id && (String(authorId) !== String(user._id))) {
+    if (!externalPosts) {
+      if (params.id) {
+        dispatch(getUserPosts(params.id));
+      } else if (user?._id) {
         dispatch(getTimelinePosts(user._id));
       }
-    });
+    }
+  }, [dispatch, user?._id, params.id, externalPosts]);
 
-    // Cleanup on unmount
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.off('new-post');
-        socketRef.current.disconnect();
+  // Set up Socket.io listener for new posts using centralized SocketContext
+  useEffect(() => {
+    if (!socket || !user?._id || externalPosts) return;
+
+    const handleNewPost = (data) => {
+      const { authorId } = data;
+      if (params.id && String(authorId) === String(params.id)) {
+        dispatch(getUserPosts(params.id));
+      } else if (!params.id && user._id && (String(authorId) !== String(user._id))) {
+        dispatch(getTimelinePosts(user._id));
       }
     };
-  }, [user?._id, externalPosts, dispatch]);
+
+    socket.on("new-post", handleNewPost);
+
+    return () => {
+      socket.off("new-post", handleNewPost);
+    };
+  }, [socket, user?._id, externalPosts, dispatch, params.id]);
 
   // Sort and filter posts
   const sortedAndFilteredPosts = useMemo(() => {
@@ -57,48 +56,42 @@ const Posts = ({ posts: externalPosts }) => {
 
     let filteredPosts = postsToUse;
 
-    // Filter by user ID if viewing a specific profile (follower's profile)
-    if (params.id) {
+    // Filter by user ID if external posts were provided and viewing a specific profile
+    if (externalPosts && params.id) {
       filteredPosts = filteredPosts.filter((post) => {
-        const postUserId = post.userId ? String(post.userId) : null;
-        const paramId = params.id ? String(params.id) : null;
+        const postUserId = post.userId?._id 
+          ? String(post.userId._id) 
+          : (post.userId ? String(post.userId) : null);
+        const paramId = String(params.id);
         return postUserId === paramId;
       });
     }
 
     // Sort by timestamp/creation date (newest first)
-    // Priority: createdAt (Mongoose default), then timestamp, then updatedAt
     const sorted = [...filteredPosts].sort((a, b) => {
-      // Get timestamp from post - prioritize createdAt (Mongoose timestamps)
       const getTimestamp = (post) => {
-        // Try createdAt first (Mongoose timestamps: true)
         if (post.createdAt) {
           const date = new Date(post.createdAt);
           if (!isNaN(date.getTime())) return date.getTime();
         }
-        // Try timestamp field
         if (post.timestamp) {
           const date = new Date(post.timestamp);
           if (!isNaN(date.getTime())) return date.getTime();
         }
-        // Try created_at
         if (post.created_at) {
           const date = new Date(post.created_at);
           if (!isNaN(date.getTime())) return date.getTime();
         }
-        // Try updatedAt as fallback
         if (post.updatedAt) {
           const date = new Date(post.updatedAt);
           if (!isNaN(date.getTime())) return date.getTime();
         }
-        // If no valid timestamp found, use 0 (will appear last)
         return 0;
       };
 
       const timestampA = getTimestamp(a);
       const timestampB = getTimestamp(b);
 
-      // Sort newest first (descending order by timestamp)
       return timestampB - timestampA;
     });
 

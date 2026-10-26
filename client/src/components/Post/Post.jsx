@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import "./Post.css";
 import Comment from "../../img/comment.png";
 import Share from "../../img/share.png";
@@ -35,7 +36,7 @@ const Post = ({ data }) => {
     return likesArray.some(likeId => String(likeId) === String(user._id));
   });
   const [likes, setLikes] = useState(likesArray.length);
-  const [likedByUsers, setLikedByUsers] = useState([]);
+  const [likedByUsers, setLikedByUsers] = useState(data.likedByUsers || []);
   const [showLikedByModal, setShowLikedByModal] = useState(false);
   const [allLikedByUsers, setAllLikedByUsers] = useState([]);
   const [loadingLikedBy, setLoadingLikedBy] = useState(false);
@@ -54,33 +55,14 @@ const Post = ({ data }) => {
   // Compare userId as strings to handle both ObjectId and string formats
   const isUserAuthor = user?._id && data.userId && String(user._id) === String(data.userId);
 
-  // Fetch users who liked the post
+  // Sync likedByUsers directly from backend (eliminates N+1 requests)
   useEffect(() => {
-    const fetchLikedByUsers = async () => {
-      const currentLikesArray = Array.isArray(data.likes) ? data.likes : [];
-      if (currentLikesArray.length > 0) {
-        try {
-          const userPromises = currentLikesArray.slice(0, 3).map(async (likeId) => {
-            try {
-              const response = await UserApi.getUser(likeId);
-              const userData = response?.data || response;
-              return userData;
-            } catch (error) {
-              // console.error(`Error fetching user ${likeId}:`, error);
-              return null;
-            }
-          });
-          const users = await Promise.all(userPromises);
-          setLikedByUsers(users.filter(u => u !== null));
-        } catch (error) {
-          // console.error("Error fetching liked by users:", error);
-        }
-      } else {
-        setLikedByUsers([]);
-      }
-    };
-    fetchLikedByUsers();
-  }, [data.likes]);
+    if (data.likedByUsers && Array.isArray(data.likedByUsers)) {
+      setLikedByUsers(data.likedByUsers);
+    } else if (!data.likes || data.likes.length === 0) {
+      setLikedByUsers([]);
+    }
+  }, [data.likedByUsers, data.likes]);
 
   // Sync likes state when data.likes changes (e.g., after refresh or update)
   useEffect(() => {
@@ -391,11 +373,17 @@ const Post = ({ data }) => {
     }
   }
 
+  const postAuthorId = data.userId?._id ? String(data.userId._id) : (data.userId ? String(data.userId) : (isUserAuthor ? user?._id : ''));
+
   return (
     <div className="Post">
       {/* Header with Avatar and Username */}
       <div className="postHeader">
-        <div style={{fontFamily:"cursive", display: "flex", alignItems: "center", gap: "0.5rem", flex: 1 }}>
+        <Link 
+          to={postAuthorId ? `/profile/${postAuthorId}` : '#'}
+          style={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: "0.5rem", flex: 1, minWidth: 0 }}
+          className="post-author-link"
+        >
           <Avatar
             profilePicture={effectiveAuthorProfilePicture}
             firstname={isUserAuthor ? user?.firstname : (effectiveAuthorName?.split(' ')[0] || null)}
@@ -405,7 +393,7 @@ const Post = ({ data }) => {
             size="32px"
           />
           <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
-            <span style={{position:"relative", bottom:"2px"}}>
+            <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>
               {displayName}
             </span>
             {data.feeling && data.feeling.type && (
@@ -415,7 +403,7 @@ const Post = ({ data }) => {
               </span>
             )}
           </div>
-        </div>
+        </Link>
         {!isUserAuthor && (
           <div 
             style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -538,22 +526,30 @@ const Post = ({ data }) => {
           <span className="liked-by-text">
             Liked by{' '}
             {likedByUsers[0] && (
-              <span className="liked-by-name">
+              <Link
+                to={`/profile/${likedByUsers[0]._id || likedByUsers[0]}`}
+                className="liked-by-name"
+                style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}
+              >
                 {likedByUsers[0].firstname && likedByUsers[0].lastname
                   ? `${likedByUsers[0].firstname} ${likedByUsers[0].lastname}`
                   : likedByUsers[0].username || 'User'}
-              </span>
+              </Link>
             )}
             {likes > 1 && (
               <>
                 {likes === 2 && likedByUsers[1] ? (
                   <>
                     {' and '}
-                    <span className="liked-by-name">
+                    <Link
+                      to={`/profile/${likedByUsers[1]._id || likedByUsers[1]}`}
+                      className="liked-by-name"
+                      style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}
+                    >
                       {likedByUsers[1].firstname && likedByUsers[1].lastname
                         ? `${likedByUsers[1].firstname} ${likedByUsers[1].lastname}`
                         : likedByUsers[1].username || 'User'}
-                    </span>
+                    </Link>
                   </>
                 ) : (
                   <>
@@ -709,19 +705,42 @@ const Post = ({ data }) => {
             {comments.map((comment) => {
               const commentLikes = Array.isArray(comment.likes) ? comment.likes : [];
               const isCommentLiked = user?._id && commentLikes.some(likeId => String(likeId) === String(user._id));
+              const commentAuthorId = comment.userId?._id ? String(comment.userId._id) : (comment.userId ? String(comment.userId) : null);
               
               return (
                 <div key={comment._id} className="comment-item">
-                  <Avatar
-                    profilePicture={comment.authorProfilePicture}
-                    firstname={comment.authorName?.split(' ')[0]}
-                    lastname={comment.authorName?.split(' ').slice(1).join(' ')}
-                    username={comment.authorUsername}
-                    size="28px"
-                  />
+                  {commentAuthorId ? (
+                    <Link to={`/profile/${commentAuthorId}`} style={{ textDecoration: 'none' }}>
+                      <Avatar
+                        profilePicture={comment.authorProfilePicture}
+                        firstname={comment.authorName?.split(' ')[0]}
+                        lastname={comment.authorName?.split(' ').slice(1).join(' ')}
+                        username={comment.authorUsername}
+                        size="28px"
+                      />
+                    </Link>
+                  ) : (
+                    <Avatar
+                      profilePicture={comment.authorProfilePicture}
+                      firstname={comment.authorName?.split(' ')[0]}
+                      lastname={comment.authorName?.split(' ').slice(1).join(' ')}
+                      username={comment.authorUsername}
+                      size="28px"
+                    />
+                  )}
                   <div className="comment-content">
                     <div className="comment-header">
-                      <span className="comment-author">{comment.authorName || "User"}</span>
+                      {commentAuthorId ? (
+                        <Link
+                          to={`/profile/${commentAuthorId}`}
+                          className="comment-author"
+                          style={{ textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}
+                        >
+                          {comment.authorName || "User"}
+                        </Link>
+                      ) : (
+                        <span className="comment-author">{comment.authorName || "User"}</span>
+                      )}
                     </div>
                     <div className="comment-text">{comment.text}</div>
                     <div className="comment-actions">
@@ -753,7 +772,13 @@ const Post = ({ data }) => {
                 <div className="loading-liked-by">Loading...</div>
               ) : allLikedByUsers.length > 0 ? (
                 allLikedByUsers.map((userData) => (
-                  <div key={userData._id} className="liked-by-user-item">
+                  <Link
+                    key={userData._id}
+                    to={`/profile/${userData._id}`}
+                    className="liked-by-user-item"
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                    onClick={() => setShowLikedByModal(false)}
+                  >
                     <Avatar
                       user={userData}
                       profilePicture={userData?.profilePicture}
@@ -770,7 +795,7 @@ const Post = ({ data }) => {
                       </span>
                       <span className="liked-by-username">@{userData?.username || 'user'}</span>
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="no-likes">No likes yet</div>

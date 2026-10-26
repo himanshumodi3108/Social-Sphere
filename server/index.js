@@ -89,6 +89,15 @@ app.use(express.urlencoded({ limit: "30mb", extended: true }));
 const apiRoutes = ['/auth', '/user', '/posts', '/upload', '/chat', '/message', '/search', '/notifications', '/stories', '/groups'];
 apiRoutes.forEach(route => app.use(route, apiLimiter));
 
+// Rewrite any legacy %PUBLIC_URL% requests
+app.use((req, res, next) => {
+  if (req.url && req.url.includes('%PUBLIC_URL%')) {
+    const cleanUrl = req.url.replace('/%PUBLIC_URL%', '').replace('%PUBLIC_URL%', '');
+    return res.redirect(cleanUrl || '/');
+  }
+  next();
+});
+
 // Static file serving
 app.use(express.static('public')); 
 app.use('/images', express.static('public/images'));
@@ -126,6 +135,25 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     uptime: process.uptime()
   });
+});
+
+// Serve static client assets if build exists
+const clientDistPath = join(__dirname, '../client/dist');
+const clientBuildPath = join(__dirname, '../client/build');
+const staticPath = existsSync(clientDistPath) ? clientDistPath : (existsSync(clientBuildPath) ? clientBuildPath : null);
+
+if (staticPath) {
+  app.use(express.static(staticPath));
+}
+
+// SPA fallback for HTML requests (handles page reloads on frontend routes like /chat, /groups, /auth, etc.)
+app.use((req, res, next) => {
+  if (req.method === 'GET' && req.accepts('html')) {
+    if (staticPath && existsSync(join(staticPath, 'index.html'))) {
+      return res.sendFile(join(staticPath, 'index.html'));
+    }
+  }
+  next();
 });
 
 // 404 handler for undefined routes

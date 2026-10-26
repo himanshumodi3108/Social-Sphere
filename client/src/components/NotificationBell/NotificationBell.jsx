@@ -1,44 +1,45 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { getUnreadCount, getNotifications, markAsRead, markAllAsRead } from "../../api/NotificationRequests";
-import { io } from "socket.io-client";
+import { useSocket } from "../../context/SocketContext";
 import "./NotificationBell.css";
 import Noti from "../../img/noti.png";
 
 const NotificationBell = () => {
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.authReducer.authData);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
-  const socketRef = useRef(null);
   const dropdownRef = useRef(null);
+  const { socket } = useSocket();
 
   useEffect(() => {
-    if (!user?._id) return;
+    if (!socket || !user?._id) return;
 
-    // Connect to socket
-    const socketUrl = process.env.REACT_APP_SOCKET_URL || "http://localhost:8800";
-    socketRef.current = io(socketUrl);
-    
     // Join notification room
-    socketRef.current.emit("join-notifications", user._id);
+    socket.emit("join-notifications", user._id);
 
     // Listen for new notifications
-    socketRef.current.on("new-notification", (notification) => {
-      setNotifications(prev => [notification, ...prev]);
-      setUnreadCount(prev => prev + 1);
-    });
+    const handleNewNotification = (notification) => {
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    };
 
-    // Fetch initial unread count
-    fetchUnreadCount();
+    socket.on("new-notification", handleNewNotification);
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.emit("leave-notifications", user._id);
-        socketRef.current.disconnect();
-      }
+      socket.emit("leave-notifications", user._id);
+      socket.off("new-notification", handleNewNotification);
     };
+  }, [socket, user?._id]);
+
+  useEffect(() => {
+    if (user?._id) {
+      fetchUnreadCount();
+    }
   }, [user?._id]);
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const NotificationBell = () => {
       const { data } = await getUnreadCount();
       setUnreadCount(data.count || 0);
     } catch (error) {
-      // console.error("Error fetching unread count:", error);
+      // ignore
     }
   };
 
@@ -74,7 +75,7 @@ const NotificationBell = () => {
       const { data } = await getNotifications(1, 10, false);
       setNotifications(data.data || []);
     } catch (error) {
-      // console.error("Error fetching notifications:", error);
+      // ignore
     } finally {
       setLoading(false);
     }
@@ -83,22 +84,22 @@ const NotificationBell = () => {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n._id === notificationId ? { ...n, read: true } : n)
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n))
       );
-      setUnreadCount(prev => Math.max(0, prev - 1));
+      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
-      // console.error("Error marking notification as read:", error);
+      // ignore
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
       await markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
     } catch (error) {
-      // console.error("Error marking all as read:", error);
+      // ignore
     }
   };
 
@@ -107,7 +108,13 @@ const NotificationBell = () => {
       handleMarkAsRead(notification._id);
     }
     if (notification.link) {
-      window.location.href = notification.link;
+      if (notification.link.startsWith('/')) {
+        navigate(notification.link);
+      } else {
+        window.location.href = notification.link;
+      }
+    } else if (notification.fromUser?._id) {
+      navigate(`/profile/${notification.fromUser._id}`);
     }
     setShowDropdown(false);
   };
@@ -176,4 +183,3 @@ const NotificationBell = () => {
 };
 
 export default NotificationBell;
-

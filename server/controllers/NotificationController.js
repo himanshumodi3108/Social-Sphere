@@ -1,14 +1,15 @@
+import mongoose from "mongoose";
 import NotificationModel from "../models/notificationModel.js";
 import UserModel from "../models/userModel.js";
 import PostModel from "../models/postModel.js";
 import logger from "../utils/logger.js";
 import { getPaginationParams, createPaginationResponse } from "../utils/pagination.js";
+
 // Import socket.io dynamically to avoid circular dependencies
 let emitNotificationFn = null;
 const getEmitNotification = async () => {
   if (!emitNotificationFn) {
     try {
-      // Dynamic import to avoid circular dependency
       const socketModule = await import("../socket/index.js");
       emitNotificationFn = socketModule.emitNotification;
     } catch (error) {
@@ -18,7 +19,65 @@ const getEmitNotification = async () => {
   return emitNotificationFn;
 };
 
-// Create a notification
+// Safe ObjectId helper
+const toObjectIdOrNull = (id) => {
+  if (id && mongoose.Types.ObjectId.isValid(String(id))) {
+    return new mongoose.Types.ObjectId(String(id));
+  }
+  return null;
+};
+
+// Helper to build notification text and link
+const buildNotificationDetails = (type, fromUserName, data = {}, fromUserId) => {
+  let message = '';
+  let link = '';
+
+  switch (type) {
+    case 'like':
+      message = `${fromUserName} liked your post`;
+      link = `/post/${data.postId}`;
+      break;
+    case 'comment':
+      message = `${fromUserName} commented on your post`;
+      link = `/post/${data.postId}`;
+      break;
+    case 'follow':
+      message = `${fromUserName} started following you`;
+      link = `/profile/${fromUserId}`;
+      break;
+    case 'mention':
+      message = `${fromUserName} mentioned you in a post`;
+      link = `/post/${data.postId}`;
+      break;
+    case 'post':
+      message = `${fromUserName} posted something new`;
+      link = `/post/${data.postId}`;
+      break;
+    case 'group_invite':
+      message = `${fromUserName} invited you to join a group`;
+      link = `/group/${data.groupId}`;
+      break;
+    case 'group_post':
+      message = `${fromUserName} posted in a group you're in`;
+      link = `/group/${data.groupId}/post/${data.postId}`;
+      break;
+    case 'message':
+      message = `${fromUserName} sent you a message`;
+      link = `/chat`;
+      break;
+    case 'story':
+      message = `${fromUserName} posted a new story`;
+      link = `/home`;
+      break;
+    default:
+      message = `${fromUserName} interacted with you`;
+      link = `/`;
+  }
+
+  return { message, link };
+};
+
+// Create a single notification
 export const createNotification = async (userId, type, fromUserId, data = {}) => {
   try {
     // Don't notify if user is notifying themselves
@@ -33,71 +92,23 @@ export const createNotification = async (userId, type, fromUserId, data = {}) =>
     }
 
     const fromUserName = `${fromUser.firstname} ${fromUser.lastname}`.trim() || fromUser.username;
-
-    // Build message based on type
-    let message = '';
-    let link = '';
-
-    switch (type) {
-      case 'like':
-        message = `${fromUserName} liked your post`;
-        link = `/post/${data.postId}`;
-        break;
-      case 'comment':
-        message = `${fromUserName} commented on your post`;
-        link = `/post/${data.postId}`;
-        break;
-      case 'follow':
-        message = `${fromUserName} started following you`;
-        link = `/profile/${fromUserId}`;
-        break;
-      case 'mention':
-        message = `${fromUserName} mentioned you in a post`;
-        link = `/post/${data.postId}`;
-        break;
-      case 'post':
-        message = `${fromUserName} posted something new`;
-        link = `/post/${data.postId}`;
-        break;
-      case 'group_invite':
-        message = `${fromUserName} invited you to join a group`;
-        link = `/group/${data.groupId}`;
-        break;
-      case 'group_post':
-        message = `${fromUserName} posted in a group you're in`;
-        link = `/group/${data.groupId}/post/${data.postId}`;
-        break;
-      case 'message':
-        message = `${fromUserName} sent you a message`;
-        link = `/chat`;
-        break;
-      case 'story':
-        message = `${fromUserName} posted a new story`;
-        link = `/home`;
-        break;
-      default:
-        message = `${fromUserName} interacted with you`;
-    }
+    const { message, link } = buildNotificationDetails(type, fromUserName, data, fromUserId);
 
     const notification = new NotificationModel({
       userId,
       type,
       fromUserId,
-      postId: data.postId || null,
+      postId: toObjectIdOrNull(data.postId),
       commentId: data.commentId || null,
-      groupId: data.groupId || null,
+      groupId: toObjectIdOrNull(data.groupId),
+      chatId: (type === 'message' && data.chatId) ? toObjectIdOrNull(data.chatId) : null,
       message,
       link,
     });
-    
-    // Add chatId for message notifications
-    if (type === 'message' && data.chatId) {
-      notification.chatId = data.chatId;
-    }
 
     const savedNotification = await notification.save();
     logger.info("Notification created", { notificationId: savedNotification._id, userId, type });
-    
+
     // Emit real-time notification via Socket.io
     try {
       const emitNotification = await getEmitNotification();
@@ -122,7 +133,7 @@ export const createNotification = async (userId, type, fromUserId, data = {}) =>
             profilePicture: fromUser.profilePicture || null,
           }
         };
-        emitNotification(userId, notificationData);
+        emitNotification(String(userId), notificationData);
         logger.info("Notification emitted via Socket.io", { notificationId: savedNotification._id, userId });
       }
     } catch (emitError) {
@@ -131,11 +142,95 @@ export const createNotification = async (userId, type, fromUserId, data = {}) =>
         notificationId: savedNotification._id 
       });
     }
-    
+
     return savedNotification;
   } catch (error) {
     logger.error("Error creating notification", { error: error.message, userId, type });
     return null;
+  }
+};
+
+// Create batch notifications (bulk insert for stories, posts fanout)
+export const createBatchNotifications = async (userIds, type, fromUserId, data = {}) => {
+  try {
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return [];
+    }
+
+    // Filter out self-notifications and duplicates
+    const targetUserIds = [...new Set(userIds.map(id => String(id)))].filter(id => id !== String(fromUserId));
+    if (targetUserIds.length === 0) {
+      return [];
+    }
+
+    const fromUser = await UserModel.findById(fromUserId).select('firstname lastname username profilePicture');
+    if (!fromUser) {
+      return [];
+    }
+
+    const fromUserName = `${fromUser.firstname} ${fromUser.lastname}`.trim() || fromUser.username;
+    const { message, link } = buildNotificationDetails(type, fromUserName, data, fromUserId);
+
+    const postId = toObjectIdOrNull(data.postId);
+    const commentId = data.commentId || null;
+    const groupId = toObjectIdOrNull(data.groupId);
+    const chatId = (type === 'message' && data.chatId) ? toObjectIdOrNull(data.chatId) : null;
+
+    const docs = targetUserIds.map((targetId) => ({
+      userId: targetId,
+      type,
+      fromUserId,
+      postId,
+      commentId,
+      groupId,
+      chatId,
+      message,
+      link,
+      read: false,
+    }));
+
+    const savedNotifications = await NotificationModel.insertMany(docs, { ordered: false });
+    logger.info("Batch notifications created successfully", { 
+      count: savedNotifications.length, 
+      type, 
+      fromUserId 
+    });
+
+    // Emit real-time notification to online followers via Socket.io
+    try {
+      const emitNotification = await getEmitNotification();
+      if (emitNotification) {
+        for (const notif of savedNotifications) {
+          emitNotification(String(notif.userId), {
+            _id: notif._id,
+            userId: notif.userId,
+            type: notif.type,
+            fromUserId: notif.fromUserId,
+            postId: notif.postId,
+            commentId: notif.commentId,
+            groupId: notif.groupId,
+            chatId: notif.chatId,
+            message: notif.message,
+            link: notif.link,
+            read: notif.read,
+            createdAt: notif.createdAt,
+            fromUser: {
+              _id: fromUser._id,
+              name: fromUserName,
+              username: fromUser.username,
+              profilePicture: fromUser.profilePicture || null,
+            },
+          });
+        }
+      }
+    } catch (socketErr) {
+      logger.warn("Batch notification socket emission error", { error: socketErr.message });
+    }
+
+    return savedNotifications;
+  } catch (error) {
+    logger.error("Error creating batch notifications", { error: error.message, type, fromUserId });
+    return [];
   }
 };
 
@@ -306,4 +401,3 @@ export const deleteNotification = async (req, res) => {
     res.status(500).json({ message: error.message || "Failed to delete notification" });
   }
 };
-

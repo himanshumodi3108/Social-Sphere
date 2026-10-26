@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import Posts from "../Posts/Posts";
 import PostShare from "../PostShare/PostShare";
 import SavedPosts from "../../pages/SavedPosts/SavedPosts";
@@ -9,29 +9,25 @@ import "./PostSide.css";
 
 const PostSide = () => {
   const location = useLocation();
-  const [showSavedPosts, setShowSavedPosts] = useState(false);
-  const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [eventTab, setEventTab] = useState(null);
   
   // Show PostShare only on home page, not on profile pages
   const isHomePage = location.pathname === "/home" || location.pathname === "/";
 
-  // Listen for custom events to show saved posts or create group
+  // Check URL query parameters (primary navigation source)
+  const currentTab = searchParams.get('tab') || eventTab;
+  const showSavedPosts = currentTab === 'saved';
+  const showCreateGroup = currentTab === 'create-group';
+
+  // Support legacy event dispatchers as fallback
   useEffect(() => {
-    const handleShowSaved = () => {
-      setShowCreateGroup(false); // Hide create group when showing saved posts
-      setShowSavedPosts(true);
-    };
-    const handleShowGroup = () => {
-      setShowSavedPosts(false); // Hide saved posts when showing create group
-      setShowCreateGroup(true);
-    };
-    const handleHideSaved = () => setShowSavedPosts(false);
-    const handleHideGroup = () => setShowCreateGroup(false);
-    const handleShowHome = () => {
-      // Reset both when navigating to home
-      setShowSavedPosts(false);
-      setShowCreateGroup(false);
-    };
+    const handleShowSaved = () => setSearchParams({ tab: 'saved' });
+    const handleShowGroup = () => setSearchParams({ tab: 'create-group' });
+    const handleHideSaved = () => setSearchParams({});
+    const handleHideGroup = () => setSearchParams({});
+    const handleShowHome = () => setSearchParams({});
 
     window.addEventListener('show-saved-posts', handleShowSaved);
     window.addEventListener('show-create-group', handleShowGroup);
@@ -46,25 +42,22 @@ const PostSide = () => {
       window.removeEventListener('hide-create-group', handleHideGroup);
       window.removeEventListener('show-home', handleShowHome);
     };
-  }, []);
-
-  // Reset when navigating away
-  useEffect(() => {
-    if (location.pathname === "/home" || location.pathname === "/") {
-      setShowSavedPosts(false);
-      setShowCreateGroup(false);
-    }
-  }, [location.pathname]);
+  }, [setSearchParams]);
 
   const handleCreateGroup = async (groupData) => {
     try {
       await createGroup(groupData);
-      setShowCreateGroup(false);
+      setSearchParams({});
+      setEventTab(null);
       window.dispatchEvent(new Event('group-created'));
     } catch (error) {
-      // console.error("Error creating group:", error);
       alert("Failed to create group");
     }
+  };
+
+  const handleClose = () => {
+    setSearchParams({});
+    setEventTab(null);
   };
 
   // Show saved posts
@@ -75,11 +68,8 @@ const PostSide = () => {
           <h2>Saved Posts</h2>
           <button 
             className="close-btn"
-            onClick={() => {
-              setShowSavedPosts(false);
-              setShowCreateGroup(false); // Ensure create group is also hidden
-              window.dispatchEvent(new Event('hide-saved-posts'));
-            }}
+            onClick={handleClose}
+            aria-label="Close saved posts"
           >
             ✕
           </button>
@@ -97,21 +87,14 @@ const PostSide = () => {
           <h2>Create New Group</h2>
           <button 
             className="close-btn"
-            onClick={() => {
-              setShowCreateGroup(false);
-              setShowSavedPosts(false); // Ensure saved posts is also hidden
-              window.dispatchEvent(new Event('hide-create-group'));
-            }}
+            onClick={handleClose}
+            aria-label="Close create group"
           >
             ✕
           </button>
         </div>
         <CreateGroupModal
-          onClose={() => {
-            setShowCreateGroup(false);
-            setShowSavedPosts(false); // Ensure saved posts is also hidden
-            window.dispatchEvent(new Event('hide-create-group'));
-          }}
+          onClose={handleClose}
           onCreate={handleCreateGroup}
         />
       </div>
