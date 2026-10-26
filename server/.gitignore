@@ -12,7 +12,7 @@ logs/
 npm-debug.log*
 
 # Uploaded files (optional - uncomment if you don't want to track uploads)
-# public/images/
+public/images/
 
 # IDE
 .vscode/
