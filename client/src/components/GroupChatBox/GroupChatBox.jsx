@@ -5,6 +5,7 @@ import { format } from "timeago.js";
 import InputEmoji from 'react-input-emoji';
 import Avatar from "../Avatar/Avatar";
 import { io } from "socket.io-client";
+import { UilUsersAlt } from "@iconscout/react-unicons";
 
 const GroupChatBox = ({ groupId, currentUser, groupName }) => {
   const [messages, setMessages] = useState([]);
@@ -42,7 +43,6 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
   useEffect(() => {
     if (receivedMessage && receivedMessage.groupId === groupId) {
       setMessages((prev) => {
-        // Check if message already exists to prevent duplicates
         const messageExists = prev.some(
           (msg) => msg._id === receivedMessage._id || 
           (msg.senderId === receivedMessage.senderId && 
@@ -79,12 +79,6 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
         setMessages(uniqueMessages);
       } catch (error) {
         // console.error("Error fetching group messages:", error);
-        // If 404, group chat might not exist yet - initialize empty
-        if (error.response?.status === 404) {
-          setMessages([]);
-        } else {
-          setMessages([]);
-        }
       } finally {
         setLoading(false);
       }
@@ -98,20 +92,22 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
     scroll.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleChange = (newMessage) => {
-    setNewMessage(newMessage);
+  const handleChange = (text) => {
+    setNewMessage(text);
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !groupId) return;
+  const handleSend = async (textOrEvent) => {
+    if (textOrEvent && typeof textOrEvent.preventDefault === 'function') {
+      textOrEvent.preventDefault();
+    }
+    
+    const messageToSend = typeof textOrEvent === 'string' ? textOrEvent.trim() : newMessage.trim();
+    if (!messageToSend || !groupId) return;
 
     try {
-      const { data } = await addGroupMessage(groupId, newMessage.trim());
+      const { data } = await addGroupMessage(groupId, messageToSend);
       
-      // Add message to local state first
       setMessages((prev) => {
-        // Check if message already exists to prevent duplicates
         const messageExists = prev.some(
           (msg) => msg._id === data._id || 
           (msg.senderId === data.senderId && 
@@ -124,7 +120,6 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
         return [...prev, data];
       });
       
-      // Emit to socket for real-time updates
       if (socket) {
         socket.emit("send-group-message", {
           ...data,
@@ -135,75 +130,78 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
       setNewMessage("");
     } catch (error) {
       // console.error("Error sending message:", error);
-      alert("Failed to send message. Please try again.");
     }
   };
 
   if (!groupId) {
     return (
       <div className="GroupChatBox-container">
-        <span className="chatbox-empty-message">
-          Join the group to start chatting...
-        </span>
+        <div className="chatbox-empty-container">
+          <div className="chatbox-empty-icon-circle">
+            <UilUsersAlt size="48" color="#0096FF" />
+          </div>
+          <h3>Group Chat</h3>
+          <p>Select a group to start conversation...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="GroupChatBox-container">
-      {/* Chat Header */}
-      <div className="group-chat-header">
-        <div className="group-chat-title">
-          <h3>{groupName || "Group Chat"}</h3>
-          <span className="member-count">{messages.length > 0 && `${messages.length} messages`}</span>
+      {/* Modern Group Chat Header */}
+      <div className="chat-header">
+        <div className="chat-header-user">
+          <div className="group-header-icon-badge">
+            <UilUsersAlt size="24" color="#0096FF" />
+          </div>
+          <div className="chat-header-info">
+            <span className="chat-header-name">{groupName || "Group Chat"}</span>
+            <span className="chat-header-subtext">
+              Community Chat • {messages.length} {messages.length === 1 ? "message" : "messages"}
+            </span>
+          </div>
         </div>
-        <hr
-          style={{
-            width: "95%",
-            border: "0.1px solid #ececec",
-            marginTop: "10px",
-          }}
-        />
       </div>
 
       {/* Chat Body */}
-      <div className="group-chat-body">
+      <div className="chat-body group-chat-body">
         {loading ? (
-          <div className="loading-messages">Loading messages...</div>
+          <div className="chat-empty-convo">
+            <div className="chat-loading-spinner" />
+            <div className="chat-empty-convo-sub">Loading group conversation...</div>
+          </div>
         ) : messages.length === 0 ? (
-          <div className="no-messages">No messages yet. Be the first to say something!</div>
+          <div className="chat-empty-convo">
+            <div className="chat-empty-convo-icon">👥</div>
+            <div className="chat-empty-convo-title">No messages in this group yet</div>
+            <div className="chat-empty-convo-sub">Be the first to say something to everyone!</div>
+          </div>
         ) : (
           messages.map((message, index) => {
-            const isOwnMessage = String(message.senderId) === String(currentUser);
-            // Create unique key - use _id if available, otherwise combine senderId, text, and timestamp
-            const uniqueKey = message._id 
-              ? message._id
-              : `msg-${message.senderId}-${message.text?.substring(0, 20)}-${message.createdAt || Date.now()}-${index}`;
+            const isOwn = String(message.senderId) === String(currentUser);
+            const uniqueKey = message._id || `msg-${index}`;
             return (
               <div
                 key={uniqueKey}
                 ref={index === messages.length - 1 ? scroll : null}
-                className={`group-message ${isOwnMessage ? "own" : ""}`}
+                className={`message-wrapper ${isOwn ? "own-wrapper" : "other-wrapper"}`}
               >
-                {!isOwnMessage && (
-                  <div className="message-sender-info">
-                    <Avatar
-                      profilePicture={message.sender?.profilePicture}
-                      firstname={message.sender?.firstname}
-                      lastname={message.sender?.lastname}
-                      username={message.sender?.username}
-                      size="30px"
-                    />
-                    <span className="sender-name">
+                {!isOwn && (
+                  <div className="group-sender-header">
+                    <span className="group-sender-name">
                       {message.sender?.firstname && message.sender?.lastname
                         ? `${message.sender.firstname} ${message.sender.lastname}`
-                        : message.sender?.username || "Unknown"}
+                        : message.sender?.username || "Member"}
                     </span>
                   </div>
                 )}
-                <div className="message-content">
+                <div className={`message ${isOwn ? "own" : "other"}`}>
                   <span className="message-text">{message.text}</span>
-                  <span className="message-time">{format(message.createdAt)}</span>
+                  <div className="message-meta">
+                    <span className="message-time">{format(message.createdAt)}</span>
+                    {isOwn && <span className="message-check" title="Sent">✓✓</span>}
+                  </div>
                 </div>
               </div>
             );
@@ -212,25 +210,32 @@ const GroupChatBox = ({ groupId, currentUser, groupName }) => {
       </div>
 
       {/* Chat Sender */}
-      <div className="group-chat-sender">
-        <InputEmoji
-          value={newMessage}
-          onChange={handleChange}
-          onEnter={handleSend}
-          placeholder="Type a message... (Press Enter to send)"
-        />
-        <div
-          className="send-button button"
-          onClick={handleSend}
-          style={{ cursor: newMessage.trim() ? "pointer" : "not-allowed", opacity: newMessage.trim() ? 1 : 0.5 }}
-        >
-          Send
+      <div className="chat-sender">
+        <div className="input-emoji-container">
+          <InputEmoji
+            value={newMessage}
+            onChange={handleChange}
+            onEnter={handleSend}
+            cleanOnEnter
+            placeholder="Type a group message... (Press Enter to send)"
+          />
         </div>
+
+        <button
+          type="button"
+          className="send-button"
+          onClick={handleSend}
+          disabled={!newMessage.trim()}
+          title="Send (Enter)"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
+          <span>Send</span>
+        </button>
       </div>
     </div>
   );
 };
 
 export default GroupChatBox;
-
-

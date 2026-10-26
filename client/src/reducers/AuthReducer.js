@@ -29,7 +29,7 @@ const authReducer = (state = { authData: null, loading: false, error: false, upd
 
 
       case "AUTH_FAIL":
-      return {...state, loading: false, error: true, initializing: false };
+      return {...state, authData: null, loading: false, error: true, initializing: false };
     case "AUTH_INIT_COMPLETE":
       return {...state, initializing: false };
     case "UPDATING_START":

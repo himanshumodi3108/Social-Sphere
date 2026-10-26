@@ -256,13 +256,24 @@ export const deletePost = async (req, res) => {
   const userId = req.userId;
 
   try {
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required to delete posts" });
+    }
+
     const post = await PostModel.findById(id);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    // Check if user is an admin
+    let isAdmin = false;
+    const currentUser = await UserModel.findById(userId).select('isAdmin');
+    if (currentUser?.isAdmin) {
+      isAdmin = true;
+    }
+
     // Only allow deletion by post owner or admin
-    if (userId && String(post.userId) !== String(userId)) {
+    if (String(post.userId) !== String(userId) && !isAdmin) {
       return res.status(403).json({ message: "You can only delete your own posts" });
     }
 

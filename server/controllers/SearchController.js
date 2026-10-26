@@ -22,17 +22,22 @@ export const search = async (req, res) => {
     const searchTerm = query.trim();
     const isHashtag = searchTerm.startsWith("#");
     const searchText = isHashtag ? searchTerm.substring(1) : searchTerm;
+    // Escape special regex characters to prevent ReDoS and regex syntax errors
+    const escapedSearchText = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const currentUserId = req.userId;
 
     // Get pagination params
     const { page, limit, skip } = getPaginationParams(req);
 
+    // Safe regex instance
+    const searchRegex = new RegExp(escapedSearchText, "i");
+
     // Build user query - exclude blocked users
     let userQuery = {
       $or: [
-        { firstname: new RegExp(searchText, "i") },
-        { lastname: new RegExp(searchText, "i") },
-        { username: new RegExp(searchText, "i") }
+        { firstname: searchRegex },
+        { lastname: searchRegex },
+        { username: searchRegex }
       ]
     };
 
@@ -77,10 +82,9 @@ export const search = async (req, res) => {
       let postQuery = {};
       
       if (isHashtag) {
-        postQuery.desc = new RegExp(`#${searchText}\\b`, "i");
+        postQuery.desc = new RegExp(`#${escapedSearchText}\\b`, "i");
       } else {
-        // Search in description or location
-        const searchRegex = new RegExp(searchText, "i");
+        // Search in description or location using precompiled escaped searchRegex
         postQuery.$or = [
           { desc: searchRegex },
           { 'location.name': searchRegex }

@@ -4,20 +4,47 @@ import GroupModel from "../models/groupModel.js";
 import logger from "../utils/logger.js";
 
 export const createChat = async (req, res) => {
-  const newChat = new ChatModel({
-    members: [req.body.senderId, req.body.receiverId],
-  });
   try {
+    const senderId = req.userId || req.body.senderId;
+    const receiverId = req.body.receiverId;
+
+    if (!receiverId) {
+      return res.status(400).json({ message: "receiverId is required" });
+    }
+
+    if (String(senderId) === String(receiverId)) {
+      return res.status(400).json({ message: "Cannot create a chat with yourself" });
+    }
+
+    // Check if chat already exists
+    const existingChat = await ChatModel.findOne({
+      members: { $all: [senderId, receiverId] },
+    });
+
+    if (existingChat) {
+      return res.status(200).json(existingChat);
+    }
+
+    const newChat = new ChatModel({
+      members: [senderId, receiverId],
+    });
     const result = await newChat.save();
     res.status(200).json(result);
   } catch (error) {
-    res.status(500).json(error);
+    logger.error("Error creating chat", { error: error.message });
+    res.status(500).json({ message: "Failed to create chat" });
   }
 };
 
 export const userChats = async (req, res) => {
   try {
     const userId = req.params.userId;
+    const currentUserId = req.userId;
+
+    // Enforce authorization: users can only fetch their own chats
+    if (currentUserId && String(currentUserId) !== String(userId)) {
+      return res.status(403).json({ message: "Access denied. You can only view your own chats." });
+    }
     
     // Get all chats for the user
     const allChats = await ChatModel.find({
@@ -94,11 +121,19 @@ export const userChats = async (req, res) => {
 };
 export const findChat = async (req, res) => {
   try {
+    const { firstId, secondId } = req.params;
+    const currentUserId = req.userId;
+
+    if (currentUserId && String(currentUserId) !== String(firstId) && String(currentUserId) !== String(secondId)) {
+      return res.status(403).json({ message: "Access denied." });
+    }
+
     const chat = await ChatModel.findOne({
-      members: { $all: [req.params.firstId, req.params.secondId] },
+      members: { $all: [firstId, secondId] },
     });
-    res.status(200).json(chat)
+    res.status(200).json(chat);
   } catch (error) {
-    res.status(500).json(error)
+    logger.error("Error finding chat", { error: error.message });
+    res.status(500).json(error);
   }
 };

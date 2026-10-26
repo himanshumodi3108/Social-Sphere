@@ -1,6 +1,56 @@
+.navIcons {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  background: var(--cardColor);
+  padding: 0.5rem 1.1rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+}
+
+.navIcons > a,
+.navIcons > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  color: #475569;
+}
+
+.navIcons > a:hover,
+.navIcons > div:hover {
+  background: rgba(0, 150, 255, 0.08);
+  color: #0096ff;
+  transform: translateY(-1px);
+}
+
+.navIcons img {
+  width: 1.35rem;
+  height: 1.35rem;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.navIcons svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  transition: transform 0.2s ease;
+}
+
 @media screen and (max-width: 768px) {
-    .navIcons{
-        margin: 0px;
-        height: 25px;
-    }
+  .navIcons {
+    gap: 0.6rem;
+    padding: 0.35rem 0.65rem;
   }
+
+  .navIcons > a,
+  .navIcons > div {
+    width: 30px;
+    height: 30px;
+  }
+}

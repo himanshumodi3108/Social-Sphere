@@ -19,7 +19,9 @@ const authMiddleWare = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, secret);
-    req.body._id = decoded?.id;
+    if (req.body && typeof req.body === 'object') {
+      req.body._id = decoded?.id;
+    }
     req.userId = decoded?.id; // Also set on req object for easier access
     
     next();

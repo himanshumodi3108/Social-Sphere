@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getUser } from "../../api/UserRequests";
 import Avatar from "../Avatar/Avatar";
 import { UilUsersAlt } from "@iconscout/react-unicons";
 
-const Conversation = ({ data, currentUser, online }) => {
+const Conversation = ({ data, currentUser, online, isActive }) => {
   const [userData, setUserData] = useState(null);
   const dispatch = useDispatch();
 
@@ -19,7 +18,6 @@ const Conversation = ({ data, currentUser, online }) => {
     }
 
     // Find the other user in the conversation (not the current user)
-    // Handle both ObjectId and string formats
     const userId = data.members.find((id) => {
       const idStr = String(id);
       const currentUserStr = String(currentUser);
@@ -27,21 +25,16 @@ const Conversation = ({ data, currentUser, online }) => {
     });
     
     const getUserData = async () => {
-      if (!userId) {
-        // console.error("Could not find other user in conversation");
-        return;
-      }
+      if (!userId) return;
       
       try {
         const response = await getUser(userId);
         const userData = response?.data || response;
         if (userData) {
           setUserData(userData);
-          dispatch({type:"SAVE_USER", data: userData});
-        } else {
-          // console.error("No user data received for userId:", userId);
+          dispatch({ type: "SAVE_USER", data: userData });
         }
-      } catch(error) {
+      } catch (error) {
         // console.error("Error fetching user data in Conversation:", error);
       }
     };
@@ -50,31 +43,17 @@ const Conversation = ({ data, currentUser, online }) => {
   }, [data.members, currentUser, isGroup, dispatch]);
 
   return (
-    <>
-      <div className="follower conversation">
-        <div>
-          {!isGroup && online && <div className="online-dot"></div>}
+    <div className={`follower conversation ${isActive ? "active-conversation" : ""}`}>
+      <div className="conversation-inner">
+        <div className="avatar-wrapper">
           {isGroup ? (
-            // Group display
-            <>
-              <Avatar
-                profilePicture={data.profilePicture}
-                firstname={data.name}
-                size="50px"
-                className="followerImage"
-              />
-              <div className="name" style={{fontSize: '0.8rem'}}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <UilUsersAlt size="14" />
-                  {data.name}
-                </span>
-                <span style={{color: "#0096FF", fontSize: '0.75rem'}}>
-                  {data.memberCount || 0} members
-                </span>
-              </div>
-            </>
+            <Avatar
+              profilePicture={data.profilePicture}
+              firstname={data.name}
+              size="46px"
+              className="followerImage"
+            />
           ) : (
-            // Individual user display
             <>
               <Avatar
                 user={userData}
@@ -82,19 +61,38 @@ const Conversation = ({ data, currentUser, online }) => {
                 firstname={userData?.firstname}
                 lastname={userData?.lastname}
                 username={userData?.username}
-                size="50px"
+                size="46px"
                 className="followerImage"
               />
-              <div className="name" style={{fontSize: '0.8rem'}}>
-                <span>{userData?.firstname} {userData?.lastname}</span>
-                <span style={{color: online?"#51e200":""}}>{online? "Online" : "Offline"}</span>
-              </div>
+              <span className={`status-dot ${online ? "online" : "offline"}`} />
+            </>
+          )}
+        </div>
+
+        <div className="conversation-details">
+          {isGroup ? (
+            <>
+              <span className="conversation-name">
+                <UilUsersAlt size="14" style={{ marginRight: "4px" }} />
+                {data.name}
+              </span>
+              <span className="conversation-subtext group-count">
+                {data.memberCount || 0} members
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="conversation-name">
+                {userData ? `${userData.firstname} ${userData.lastname}` : "Loading..."}
+              </span>
+              <span className={`conversation-subtext ${online ? "online-text" : "offline-text"}`}>
+                {online ? "Active now" : "Offline"}
+              </span>
             </>
           )}
         </div>
       </div>
-      <hr style={{ width: "85%", border: "0.1px solid #ececec" }} />
-    </>
+    </div>
   );
 };
 

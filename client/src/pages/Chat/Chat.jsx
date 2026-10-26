@@ -110,6 +110,10 @@ const Chat = () => {
                   data={chat}
                   currentUser={user._id}
                   online={checkOnlineStatus(chat)}
+                  isActive={
+                    currentChat?._id === chat._id ||
+                    (currentChat?.type === 'group' && currentChat?.groupId === chat.groupId)
+                  }
                 />
               </div>
             ))}
@@ -119,11 +123,11 @@ const Chat = () => {
 
       {/* Right Side */}
       <div className="Right-side-chat" >
-        <div  className="nav-icons-container" >
+        <div className="nav-icons-container" >
           <NavIcons />
         </div>
 
-        <div style={{height:"50%"}}>
+        <div className="chatbox-wrapper">
         {currentChat?.type === 'group' ? (
           <GroupChatBox
             groupId={currentChat.groupId}

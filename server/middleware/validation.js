@@ -7,7 +7,7 @@ export const handleValidationErrors = (req, res, next) => {
   if (!errors.isEmpty()) {
     logger.warn('Validation errors', { errors: errors.array(), path: req.path });
     return res.status(400).json({ 
-      message: 'Validation failed',
+      message: errors.array()[0]?.msg || 'Validation failed',
       errors: errors.array() 
     });
   }

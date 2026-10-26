@@ -1,3 +1,15 @@
+import dns from "node:dns";
+
+// Fix for Node.js querySrv ECONNREFUSED with MongoDB Atlas on Windows/local router DNS
+try {
+  dns.setServers(['8.8.8.8', '8.8.4.4', '1.1.1.1']);
+  if (typeof dns.setDefaultResultOrder === 'function') {
+    dns.setDefaultResultOrder('ipv4first');
+  }
+} catch (dnsErr) {
+  // Ignore if custom DNS cannot be configured in the current environment
+}
+
 import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -73,8 +85,9 @@ app.use(cors({
 app.use(express.json({ limit: "30mb", extended: true }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
 
-// Rate limiting for all API routes
-app.use('/api/', apiLimiter);
+// Rate limiting for all API routes (excluding static assets and health check)
+const apiRoutes = ['/auth', '/user', '/posts', '/upload', '/chat', '/message', '/search', '/notifications', '/stories', '/groups'];
+apiRoutes.forEach(route => app.use(route, apiLimiter));
 
 // Static file serving
 app.use(express.static('public')); 
