@@ -2,17 +2,47 @@ import nodemailer from 'nodemailer';
 import logger from './logger.js';
 
 /**
+ * Helper to strip surrounding quotes and trim whitespace from environment variables
+ */
+const cleanEnv = (val) => {
+  if (!val) return '';
+  return String(val).trim().replace(/^["']|["']$/g, '').trim();
+};
+
+/**
  * Create SMTP transporter if environment credentials are provided
  */
 const createTransporter = () => {
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const port = parseInt(process.env.SMTP_PORT || '587', 10);
-  const secure = process.env.SMTP_SECURE === 'true' || port === 465;
+  const host = cleanEnv(process.env.SMTP_HOST);
+  const user = cleanEnv(process.env.SMTP_USER);
+  let pass = cleanEnv(process.env.SMTP_PASS);
+  const service = cleanEnv(process.env.SMTP_SERVICE).toLowerCase();
+  const port = parseInt(cleanEnv(process.env.SMTP_PORT) || '587', 10);
+  const secure = cleanEnv(process.env.SMTP_SECURE) === 'true' || port === 465;
 
-  if (!host || !user || !pass) {
+  if ((!host && !service) || !user || !pass) {
     return null;
+  }
+
+  // Google App Passwords are 16 letters usually formatted in 4 blocks of 4 with spaces
+  // (e.g., 'abcd efgh ijkl mnop'). Strip spaces automatically for Gmail.
+  const isGmail = service === 'gmail' || host.toLowerCase().includes('gmail');
+  if (isGmail) {
+    pass = pass.replace(/\s+/g, '');
+  }
+
+  // Use pre-configured 'gmail' service for optimal port and TLS handshake on cloud hosts
+  if (isGmail) {
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user,
+        pass,
+      },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+    });
   }
 
   return nodemailer.createTransport({
@@ -25,7 +55,11 @@ const createTransporter = () => {
     },
     tls: {
       rejectUnauthorized: false,
+      minVersion: 'TLSv1.2',
     },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
   });
 };
 
@@ -37,7 +71,10 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     return { success: false, error: 'Recipient email missing' };
   }
 
-  const from = process.env.FROM_EMAIL || `"SocialSphere" <no-reply@socialsphere.com>`;
+  const user = cleanEnv(process.env.SMTP_USER);
+  // Default From address: match authenticated SMTP user to prevent Gmail/provider anti-spoofing rejection
+  const defaultFrom = user ? `"SocialSphere" <${user}>` : `"SocialSphere" <no-reply@socialsphere.com>`;
+  const from = cleanEnv(process.env.FROM_EMAIL) || defaultFrom;
   const transporter = createTransporter();
 
   if (transporter) {
@@ -54,7 +91,11 @@ export const sendEmail = async ({ to, subject, html, text }) => {
     } catch (error) {
       logger.warn('SMTP delivery failed, falling back to simulated log', {
         to,
-        error: error.message,
+        errorMessage: error.message,
+        errorCode: error.code || error.errno,
+        responseCode: error.responseCode,
+        response: error.response,
+        command: error.command,
       });
     }
   }

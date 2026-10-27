@@ -6,8 +6,10 @@ const transports = [
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
       winston.format.colorize(),
       winston.format.printf(({ timestamp, level, message, ...meta }) => {
-        const metaStr = Object.keys(meta).length && meta.service !== 'socialsphere-api' 
-          ? ` ${JSON.stringify(meta)}` 
+        const cleanMeta = { ...meta };
+        delete cleanMeta.service;
+        const metaStr = Object.keys(cleanMeta).length > 0 
+          ? ` ${JSON.stringify(cleanMeta)}` 
           : '';
         return `[${timestamp}] ${level}: ${message}${metaStr}`;
       })
