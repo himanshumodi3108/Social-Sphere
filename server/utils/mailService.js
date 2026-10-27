@@ -64,15 +64,154 @@ const createTransporter = () => {
 };
 
 /**
- * Send email using SMTP or fallback to EmailJS / Simulation Logger
+ * Send email via Resend API (HTTPS Port 443 - Never blocked on Render Free tier)
  */
-export const sendEmail = async ({ to, subject, html, text }) => {
+const sendViaResend = async ({ to, subject, html, text, from }) => {
+  const apiKey = cleanEnv(process.env.RESEND_API_KEY);
+  if (!apiKey) return null;
+
+  try {
+    const defaultFrom = cleanEnv(process.env.FROM_EMAIL) || 'SocialSphere <onboarding@resend.dev>';
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: from || defaultFrom,
+        to: [to],
+        subject,
+        html,
+        text: text || html.replace(/<[^>]*>?/gm, ''),
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error?.message || 'Resend API error');
+    }
+
+    logger.info('Email sent successfully via Resend API (HTTPS)', { to, id: data.id });
+    return { success: true, messageId: data.id, provider: 'resend' };
+  } catch (error) {
+    logger.warn('Resend API delivery failed', { error: error.message });
+    return null;
+  }
+};
+
+/**
+ * Send email via Brevo / Sendinblue REST API (HTTPS Port 443)
+ */
+const sendViaBrevo = async ({ to, subject, html, text }) => {
+  const apiKey = cleanEnv(process.env.BREVO_API_KEY);
+  if (!apiKey) return null;
+
+  try {
+    const senderEmail = cleanEnv(process.env.FROM_EMAIL) || cleanEnv(process.env.SMTP_USER);
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        sender: { name: 'SocialSphere', email: senderEmail },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text || html.replace(/<[^>]*>?/gm, ''),
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Brevo API error');
+    }
+
+    logger.info('Email sent successfully via Brevo API (HTTPS)', { to, messageId: data.messageId });
+    return { success: true, messageId: data.messageId, provider: 'brevo' };
+  } catch (error) {
+    logger.warn('Brevo API delivery failed', { error: error.message });
+    return null;
+  }
+};
+
+/**
+ * Send email via EmailJS REST API (HTTPS Port 443)
+ */
+const sendViaEmailJS = async ({ to, subject, html, text, code, name }) => {
+  const serviceId = cleanEnv(process.env.EMAILJS_SERVICE_ID);
+  const templateId = cleanEnv(process.env.EMAILJS_TEMPLATE_ID);
+  const publicKey = cleanEnv(process.env.EMAILJS_PUBLIC_KEY);
+  const privateKey = cleanEnv(process.env.EMAILJS_PRIVATE_KEY);
+
+  if (!serviceId || !templateId || !publicKey) return null;
+
+  try {
+    const payload = {
+      service_id: serviceId,
+      template_id: templateId,
+      user_id: publicKey,
+      template_params: {
+        to_email: to,
+        to_name: name || 'User',
+        subject: subject,
+        code: code || '',
+        message: text || html.replace(/<[^>]*>?/gm, ''),
+      },
+    };
+
+    if (privateKey) {
+      payload.accessToken = privateKey;
+    }
+
+    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(errText || 'EmailJS API error');
+    }
+
+    logger.info('Email sent successfully via EmailJS REST API (HTTPS)', { to });
+    return { success: true, provider: 'emailjs' };
+  } catch (error) {
+    logger.warn('EmailJS delivery failed', { error: error.message });
+    return null;
+  }
+};
+
+/**
+ * Send email using Resend / Brevo / EmailJS (HTTPS) or SMTP or fallback to Simulation Logger
+ */
+export const sendEmail = async ({ to, subject, html, text, code, name }) => {
   if (!to) {
     return { success: false, error: 'Recipient email missing' };
   }
 
+  // 1. Try HTTPS-based providers first (Port 443 is 100% open and never blocked on Render)
+  if (process.env.RESEND_API_KEY) {
+    const resendResult = await sendViaResend({ to, subject, html, text });
+    if (resendResult) return resendResult;
+  }
+
+  if (process.env.BREVO_API_KEY) {
+    const brevoResult = await sendViaBrevo({ to, subject, html, text });
+    if (brevoResult) return brevoResult;
+  }
+
+  if (process.env.EMAILJS_SERVICE_ID) {
+    const emailJsResult = await sendViaEmailJS({ to, subject, html, text, code, name });
+    if (emailJsResult) return emailJsResult;
+  }
+
+  // 2. Try SMTP Transporter (Port 465 / 587)
   const user = cleanEnv(process.env.SMTP_USER);
-  // Default From address: match authenticated SMTP user to prevent Gmail/provider anti-spoofing rejection
   const defaultFrom = user ? `"SocialSphere" <${user}>` : `"SocialSphere" <no-reply@socialsphere.com>`;
   const from = cleanEnv(process.env.FROM_EMAIL) || defaultFrom;
   const transporter = createTransporter();
@@ -87,7 +226,7 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         html,
       });
       logger.info('Email sent successfully via SMTP', { to, messageId: info.messageId });
-      return { success: true, messageId: info.messageId };
+      return { success: true, messageId: info.messageId, provider: 'smtp' };
     } catch (error) {
       logger.warn('SMTP delivery failed, falling back to simulated log', {
         to,
@@ -97,10 +236,16 @@ export const sendEmail = async ({ to, subject, html, text }) => {
         response: error.response,
         command: error.command,
       });
+
+      if ((error.code === 'ETIMEDOUT' || error.message?.includes('timeout')) && process.env.RENDER) {
+        logger.error(
+          '⚠️ [Render Outbound Port Restriction Detected]: Render Free tier blocks outbound SMTP ports 25, 465, and 587. To send real emails from Render Free tier, add RESEND_API_KEY, BREVO_API_KEY, or EMAILJS credentials (which communicate over HTTPS port 443).'
+        );
+      }
     }
   }
 
-  // Graceful simulation / dev logging if SMTP is not configured or failed
+  // Graceful simulation / dev logging if all external providers are unavailable or blocked
   logger.info('📧 [Email Service - Simulated]', {
     to,
     from,
@@ -166,6 +311,7 @@ export const sendWelcomeMessage = async ({ to, phone, name }) => {
         to,
         subject: `Welcome to SocialSphere, ${displayName}! 🎉`,
         html: welcomeHtml,
+        name: displayName,
       })
     );
   }
@@ -208,5 +354,7 @@ export const sendOtpEmail = async ({ to, name, code, purpose = 'Security Verific
     to,
     subject: `Your SocialSphere verification code: ${code}`,
     html,
+    code,
+    name: displayName,
   });
 };
