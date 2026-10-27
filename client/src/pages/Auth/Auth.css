@@ -660,3 +660,117 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ========================================================================= */
+/* Additional Features: Forgot Password, MFA & Contact Requirements           */
+/* ========================================================================= */
+
+.field-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: #0096ff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+  color: #0077e6;
+}
+
+.contact-requirement-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 500;
+  margin-top: -0.25rem;
+  transition: all 0.2s ease;
+}
+
+.pill-satisfied {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.pill-pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.auth-secondary-btn {
+  width: 100%;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-secondary-btn:hover {
+  background: var(--inputColor);
+  color: var(--black);
+}
+
+.mfa-challenge-box {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  text-align: center;
+}
+
+.mfa-icon-badge {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(0, 150, 255, 0.15), rgba(0, 210, 255, 0.15));
+  color: #0096ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.mfa-code-input {
+  letter-spacing: 0.5rem;
+  text-align: center;
+  font-family: monospace;
+  font-size: 1.5rem !important;
+  font-weight: 700;
+}
+
+.forgot-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 2rem;
+  background: rgba(0, 150, 255, 0.1);
+  color: #0096ff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}

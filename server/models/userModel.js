@@ -23,6 +23,44 @@ const UserSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    phone: {
+      type: String,
+      trim: true,
+      sparse: true,
+    },
+    phoneVerified: {
+      type: Boolean,
+      default: false,
+    },
+    mfa: {
+      enabled: {
+        type: Boolean,
+        default: false,
+      },
+      method: {
+        type: String,
+        enum: ['email', 'phone', 'totp'],
+        default: 'email',
+      },
+      totpSecret: {
+        type: String,
+      },
+      tempSecret: {
+        type: String,
+      },
+      otpCode: {
+        type: String,
+      },
+      otpExpires: {
+        type: Date,
+      },
+    },
+    resetPasswordOtp: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
+    },
     firstname: {
       type: String,
       required: true,
@@ -73,6 +111,7 @@ const UserSchema = mongoose.Schema(
 // Add indexes for better query performance
 UserSchema.index({ username: 1 }, { unique: true });
 UserSchema.index({ email: 1 }, { sparse: true });
+UserSchema.index({ phone: 1 }, { sparse: true });
 UserSchema.index({ followers: 1 });
 UserSchema.index({ following: 1 });
 UserSchema.index({ blocked: 1 });

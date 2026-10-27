@@ -7,6 +7,8 @@ import jwt from 'jsonwebtoken';
 import logger from "../utils/logger.js";
 import { getPaginationParams, createPaginationResponse } from "../utils/pagination.js";
 import { createNotification } from "./NotificationController.js";
+import { generateSecret, verifyTotp, getOtpAuthUrl } from "../utils/totp.js";
+import { sendOtpEmail, sendSms } from "../utils/mailService.js";
 
 // Get a User
 export const getUser = async (req, res) => {
@@ -59,8 +61,22 @@ export const getUser = async (req, res) => {
       if (!isSelf) {
         delete otherDetails.email;
         delete otherDetails.emailVerified;
+        delete otherDetails.phone;
+        delete otherDetails.phoneVerified;
+        delete otherDetails.mfa;
+        delete otherDetails.resetPasswordOtp;
+        delete otherDetails.resetPasswordExpires;
         delete otherDetails.blocked;
         delete otherDetails.savedPosts;
+      } else {
+        delete otherDetails.resetPasswordOtp;
+        delete otherDetails.resetPasswordExpires;
+        if (otherDetails.mfa) {
+          otherDetails.mfa = {
+            enabled: Boolean(otherDetails.mfa.enabled),
+            method: otherDetails.mfa.method || 'email',
+          };
+        }
       }
       
       res.status(200).json(otherDetails);
@@ -537,5 +553,233 @@ export const getSavedPosts = async (req, res) => {
   } catch (error) {
     logger.error("Error fetching saved posts", { error: error.message, userId });
     res.status(500).json({ message: error.message || "Failed to fetch saved posts" });
+  }
+};
+
+// Change Password (authenticated in settings)
+export const changePassword = async (req, res) => {
+  const { id } = req.params;
+  const currentUserId = req.userId;
+
+  if (String(currentUserId) !== String(id)) {
+    return res.status(403).json({ message: "Access denied. You can only change your own password." });
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password." });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    logger.info("Password changed successfully in settings", { userId: id });
+    res.status(200).json({ message: "Password updated successfully!" });
+  } catch (error) {
+    logger.error("Error changing password", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to update password." });
+  }
+};
+
+// Setup MFA - Generate TOTP Secret or send SMS/Email verification code
+export const setupMfa = async (req, res) => {
+  const { id } = req.params;
+  const currentUserId = req.userId;
+
+  if (String(currentUserId) !== String(id)) {
+    return res.status(403).json({ message: "Access denied." });
+  }
+
+  const { method } = req.body; // 'totp', 'email', 'phone'
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (method === "totp") {
+      const secret = generateSecret();
+      const otpauthUrl = getOtpAuthUrl(user.username, secret);
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(otpauthUrl)}`;
+
+      user.mfa.tempSecret = secret;
+      await user.save();
+
+      return res.status(200).json({
+        method: "totp",
+        secret,
+        qrCodeUrl,
+        otpauthUrl,
+        message: "Scan the QR code with Google Authenticator or enter the secret key manually.",
+      });
+    } else if (method === "email") {
+      if (!user.email) {
+        return res.status(400).json({
+          message: "Please add and save an email address in your profile before enabling Email MFA.",
+        });
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.mfa.otpCode = otp;
+      user.mfa.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+
+      await sendOtpEmail({
+        to: user.email,
+        name: user.firstname,
+        code: otp,
+        purpose: "SocialSphere 2FA Setup",
+      });
+
+      return res.status(200).json({
+        method: "email",
+        destination: user.email,
+        message: `A verification code has been sent to ${user.email}.`,
+      });
+    } else if (method === "phone") {
+      if (!user.phone) {
+        return res.status(400).json({
+          message: "Please add and save a phone number in your profile before enabling SMS MFA.",
+        });
+      }
+
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      user.mfa.otpCode = otp;
+      user.mfa.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+      await user.save();
+
+      await sendSms({
+        to: user.phone,
+        message: `Your SocialSphere MFA activation code is: ${otp}. Valid for 10 minutes.`,
+      });
+
+      return res.status(200).json({
+        method: "phone",
+        destination: user.phone,
+        message: `A verification code has been sent to ${user.phone}.`,
+      });
+    } else {
+      return res.status(400).json({ message: "Invalid MFA method requested." });
+    }
+  } catch (error) {
+    logger.error("Error setting up MFA", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to set up MFA." });
+  }
+};
+
+// Enable MFA after user enters confirmation code
+export const enableMfa = async (req, res) => {
+  const { id } = req.params;
+  const currentUserId = req.userId;
+
+  if (String(currentUserId) !== String(id)) {
+    return res.status(403).json({ message: "Access denied." });
+  }
+
+  const { method, code } = req.body;
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    let isValid = false;
+
+    if (method === "totp") {
+      if (!user.mfa.tempSecret) {
+        return res.status(400).json({ message: "Please initiate TOTP setup first." });
+      }
+      isValid = verifyTotp(user.mfa.tempSecret, code);
+      if (isValid) {
+        user.mfa.enabled = true;
+        user.mfa.method = "totp";
+        user.mfa.totpSecret = user.mfa.tempSecret;
+        user.mfa.tempSecret = undefined;
+      }
+    } else if (method === "email" || method === "phone") {
+      const now = new Date();
+      if (
+        user.mfa.otpCode &&
+        user.mfa.otpCode.trim() === String(code).trim() &&
+        user.mfa.otpExpires &&
+        user.mfa.otpExpires > now
+      ) {
+        isValid = true;
+        user.mfa.enabled = true;
+        user.mfa.method = method;
+        user.mfa.otpCode = undefined;
+        user.mfa.otpExpires = undefined;
+      }
+    }
+
+    if (!isValid) {
+      return res.status(400).json({ message: "Invalid or expired verification code." });
+    }
+
+    await user.save();
+
+    logger.info("MFA enabled successfully", { userId: id, method });
+    res.status(200).json({
+      message: "Two-Factor Authentication is now enabled!",
+      mfa: { enabled: true, method: user.mfa.method },
+    });
+  } catch (error) {
+    logger.error("Error enabling MFA", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to enable MFA." });
+  }
+};
+
+// Disable MFA with password verification
+export const disableMfa = async (req, res) => {
+  const { id } = req.params;
+  const currentUserId = req.userId;
+
+  if (String(currentUserId) !== String(id)) {
+    return res.status(403).json({ message: "Access denied." });
+  }
+
+  const { password } = req.body;
+
+  try {
+    const user = await UserModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (!password) {
+      return res.status(400).json({ message: "Password is required to disable Two-Factor Authentication." });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect password." });
+    }
+
+    user.mfa.enabled = false;
+    user.mfa.totpSecret = undefined;
+    user.mfa.tempSecret = undefined;
+    user.mfa.otpCode = undefined;
+    user.mfa.otpExpires = undefined;
+    await user.save();
+
+    logger.info("MFA disabled", { userId: id });
+    res.status(200).json({
+      message: "Two-Factor Authentication has been disabled.",
+      mfa: { enabled: false, method: user.mfa.method },
+    });
+  } catch (error) {
+    logger.error("Error disabling MFA", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to disable MFA." });
   }
 };

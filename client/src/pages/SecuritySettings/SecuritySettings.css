@@ -1,0 +1,507 @@
+/* Security & MFA Settings Page Styles */
+
+.SecuritySettings {
+  padding: 1rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.security-settings-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Settings Nav Tabs */
+.settings-nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  background-color: var(--cardColor);
+  border: 1px solid var(--card-border);
+  border-radius: 0.85rem;
+  margin-bottom: 0.5rem;
+  overflow-x: auto;
+}
+
+.nav-tab {
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.65rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  color: var(--black);
+  background-color: var(--inputColor);
+}
+
+.nav-tab.active {
+  background-color: #0096ff;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 150, 255, 0.25);
+}
+
+.settings-header h1 {
+  margin: 0 0 0.4rem 0;
+  font-size: 1.75rem;
+  color: var(--textColor);
+}
+
+.settings-subtitle {
+  margin: 0;
+  color: var(--gray);
+  font-size: 0.95rem;
+}
+
+/* Security Cards */
+.security-card {
+  background-color: var(--cardColor);
+  border: 1px solid var(--card-border);
+  border-radius: 1.25rem;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.card-title-row h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--textColor);
+}
+
+.card-desc {
+  margin: 0.35rem 0 0 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Status Pills */
+.status-pill {
+  padding: 0.25rem 0.65rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pill-active {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pill-inactive {
+  background-color: rgba(100, 116, 139, 0.15);
+  color: #64748b;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+/* Active MFA Box */
+.mfa-active-box {
+  background-color: var(--inputColor);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mfa-active-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.active-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: #10b981;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.mfa-active-info strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--textColor);
+  margin-bottom: 0.25rem;
+}
+
+.mfa-active-info p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.badge-method {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.4rem;
+  background-color: rgba(0, 150, 255, 0.15);
+  color: #0096ff;
+  font-weight: 600;
+}
+
+/* MFA Method Selection Grid */
+.sub-heading {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--textColor);
+}
+
+.mfa-methods-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.mfa-method-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 0.85rem;
+  border: 2px solid var(--card-border);
+  background-color: var(--cardColor);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mfa-method-card:hover {
+  border-color: #0096ff;
+  background-color: rgba(0, 150, 255, 0.04);
+}
+
+.method-selected {
+  border-color: #0096ff !important;
+  background-color: rgba(0, 150, 255, 0.08) !important;
+  box-shadow: 0 2px 10px rgba(0, 150, 255, 0.12);
+}
+
+.method-icon-box {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background-color: rgba(0, 150, 255, 0.12);
+  color: #0096ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.method-info {
+  flex: 1;
+}
+
+.method-info h4 {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.98rem;
+  color: var(--textColor);
+}
+
+.method-info p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.mfa-actions-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+/* Activation / TOTP Display */
+.mfa-activation-box {
+  background-color: var(--inputColor);
+  border: 1px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.setup-header h4 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1.1rem;
+  color: var(--textColor);
+}
+
+.setup-header p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.totp-setup-display {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  background-color: var(--cardColor);
+  border-radius: 0.85rem;
+  border: 1px solid var(--card-border);
+}
+
+.qr-container {
+  background: #ffffff;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.qr-image {
+  width: 140px;
+  height: 140px;
+  display: block;
+}
+
+.secret-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.secret-label {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}
+
+.secret-code {
+  font-family: monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--inputColor);
+  border-radius: 0.5rem;
+  color: #0096ff;
+  border: 1px dashed #0096ff;
+  word-break: break-all;
+}
+
+.activation-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.activation-input-group label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--textColor);
+}
+
+.activation-code-input {
+  letter-spacing: 0.5rem;
+  text-align: center;
+  font-family: monospace;
+  font-size: 1.4rem !important;
+  font-weight: 700;
+  max-width: 280px;
+}
+
+.activation-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Disable MFA Form */
+.disable-mfa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirm-prompt {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.disable-input-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Forms: Change Password & Contact */
+.change-password-form,
+.contact-info-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.dual-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--textColor);
+}
+
+.input-toggle-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.toggle-icon-btn {
+  position: absolute;
+  right: 0.85rem;
+  background: none;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon-wrapper .input-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--gray);
+  pointer-events: none;
+}
+
+.input-icon-wrapper .modern-input {
+  padding-left: 2.5rem;
+}
+
+.form-action-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+/* Button Styles */
+.primary-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: linear-gradient(135deg, #0096ff 0%, #0077e6 100%);
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 150, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 150, 255, 0.4);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.danger-outline-btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid #ef4444;
+  background: transparent;
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.danger-outline-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.danger-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  border: none;
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background: var(--inputColor);
+}
+
+/* Responsiveness */
+@media (max-width: 640px) {
+  .dual-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .totp-setup-display {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .disable-input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

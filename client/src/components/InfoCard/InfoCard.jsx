@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useMemo } from "react";
 import "./InfoCard.css";
-import { UilPen } from "@iconscout/react-unicons";
+import { UilPen, UilSetting } from "@iconscout/react-unicons";
 import { Modal, useMantineTheme } from "@mantine/core";
 import { toast } from "sonner";
 import ProfileModal from "../ProfileModal/ProfileModal";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import * as UserApi from "../../api/UserRequests.js";
 import { logout } from "../../actions/AuthActions";
 import { followUser, unfollowUser, blockUser, unblockUser } from "../../actions/UserAction";
@@ -125,7 +125,29 @@ const InfoCard = () => {
 
       {user?._id === profileUserId ? (
         <>
-          <button className="button logout-button" style={{background:"#0096FF"}} onClick={handleLogOut}>Log Out</button>
+          <div style={{ display: "flex", gap: "0.5rem", width: "100%", marginTop: "1rem" }}>
+            <Link 
+              to="/settings" 
+              className="button"
+              style={{
+                flex: 1,
+                background: "var(--inputColor)",
+                color: "var(--textColor)",
+                textDecoration: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "0.4rem",
+                fontSize: "14px",
+                fontWeight: 600,
+                borderRadius: "8px",
+                height: "2.2rem"
+              }}
+            >
+              <UilSetting size="18" /> Settings
+            </Link>
+            <button className="button logout-button" style={{background:"#0096FF", flex: 1, margin: 0, height: "2.2rem"}} onClick={handleLogOut}>Log Out</button>
+          </div>
           <Modal
             overlayColor={
               theme.colorScheme === "dark"

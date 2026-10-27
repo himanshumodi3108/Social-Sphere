@@ -36,10 +36,24 @@ export const validateRegister = [
     .isLength({ min: 1, max: 50 })
     .withMessage('Last name is required and must be less than 50 characters'),
   body('email')
-    .optional()
+    .optional({ checkFalsy: true })
+    .trim()
     .isEmail()
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
+  body('phone')
+    .optional({ checkFalsy: true })
+    .trim()
+    .matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{6,15}$/)
+    .withMessage('Please provide a valid phone number (minimum 7 digits)'),
+  body().custom((value, { req }) => {
+    const email = req.body.email && String(req.body.email).trim();
+    const phone = req.body.phone && String(req.body.phone).trim();
+    if (!email && !phone) {
+      throw new Error('Please provide at least one contact method: Email or Phone Number');
+    }
+    return true;
+  }),
   handleValidationErrors
 ];
 
@@ -51,6 +65,54 @@ export const validateLogin = [
   body('password')
     .notEmpty()
     .withMessage('Password is required'),
+  handleValidationErrors
+];
+
+export const validateVerifyMfa = [
+  body('tempUserId')
+    .notEmpty()
+    .withMessage('Temporary user ID is required'),
+  body('code')
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage('A 6-digit verification code is required'),
+  handleValidationErrors
+];
+
+export const validateForgotPassword = [
+  body('identifier')
+    .trim()
+    .notEmpty()
+    .withMessage('Username or email is required'),
+  handleValidationErrors
+];
+
+export const validateResetPassword = [
+  body('identifier')
+    .trim()
+    .notEmpty()
+    .withMessage('Username or email is required'),
+  body('code')
+    .trim()
+    .isLength({ min: 6, max: 6 })
+    .withMessage('A 6-digit reset code is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
+  handleValidationErrors
+];
+
+export const validateChangePassword = [
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  body('newPassword')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('New password must contain at least one uppercase letter, one lowercase letter, and one number'),
   handleValidationErrors
 ];
 
@@ -92,10 +154,16 @@ export const validateUserUpdate = [
     .isLength({ min: 1, max: 50 })
     .withMessage('Last name must be between 1 and 50 characters'),
   body('email')
-    .optional()
+    .optional({ checkFalsy: true })
+    .trim()
     .isEmail()
     .withMessage('Please provide a valid email address')
     .normalizeEmail(),
+  body('phone')
+    .optional({ checkFalsy: true })
+    .trim()
+    .matches(/^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]{6,15}$/)
+    .withMessage('Please provide a valid phone number'),
   body('password')
     .optional()
     .isLength({ min: 6 })
@@ -128,17 +196,10 @@ export const validateId = [
     .notEmpty()
     .withMessage('ID parameter is required')
     .custom((value) => {
-      // Allow MongoDB ObjectId format or any non-empty string
-      // MongoDB ObjectId is 24 hex characters
       if (typeof value !== 'string' || value.trim().length === 0) {
         throw new Error('ID must be a non-empty string');
       }
-      // Log validation for debugging
-      // console.log('[validateId] Validating ID:', value);
-      // Optional: validate MongoDB ObjectId format (24 hex chars)
-      // But don't fail if it's not - let the controller handle it
       return true;
     }),
   handleValidationErrors
 ];
-

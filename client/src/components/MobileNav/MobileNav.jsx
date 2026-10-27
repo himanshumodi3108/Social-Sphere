@@ -8,7 +8,8 @@ import {
   UilUser, 
   UilPlus,
   UilSun,
-  UilMoon
+  UilMoon,
+  UilSetting
 } from "@iconscout/react-unicons";
 import { useTheme } from "../../context/ThemeContext";
 import "./MobileNav.css";
@@ -81,14 +82,24 @@ const MobileNav = () => {
       </Link>
 
       {user?._id ? (
-        <Link 
-          to={`/profile/${user._id}`} 
-          className={`mobile-nav-item ${isProfile ? "active" : ""}`}
-          title="Profile"
-        >
-          <UilUser size="24" />
-          <span>Profile</span>
-        </Link>
+        <>
+          <Link 
+            to={`/profile/${user._id}`} 
+            className={`mobile-nav-item ${isProfile ? "active" : ""}`}
+            title="Profile"
+          >
+            <UilUser size="24" />
+            <span>Profile</span>
+          </Link>
+          <Link 
+            to="/settings" 
+            className={`mobile-nav-item ${location.pathname.startsWith("/settings") ? "active" : ""}`}
+            title="Settings"
+          >
+            <UilSetting size="24" />
+            <span>Settings</span>
+          </Link>
+        </>
       ) : (
         <button
           type="button"

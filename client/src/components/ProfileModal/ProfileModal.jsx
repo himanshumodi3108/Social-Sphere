@@ -198,11 +198,11 @@ const ProfileModal = ({ modalOpened, setModalOpened, data }) => {
 
             <div style={{ display: "flex", gap: "0.75rem", width: "100%", justifyContent: "flex-end", marginTop: "1rem" }}>
               <a
-                href="/privacy-settings"
+                href="/settings"
                 className="infoButton"
                 style={{background:"var(--gray)", textDecoration: "none"}}
               >
-                Privacy Settings
+                Security & Settings
               </a>
               <button className="infoButton" type="submit" style={{background:"#0096FF"}}>
                 Update

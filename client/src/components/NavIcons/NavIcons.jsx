@@ -43,16 +43,18 @@ const NavIcons = () => {
         <img style={{ width: "1.5rem", height: "1.5rem" }} src={Home} alt="Home" />
       </Link>
 
-      <div 
-        onClick={handleShowCreateGroup}
+      <Link 
+        to="/settings"
         style={{ 
           cursor: "pointer", 
-          color: currentTab === "create-group" ? "#0096FF" : "inherit" 
+          color: location.pathname.startsWith("/settings") ? "#0096FF" : "inherit",
+          display: "flex",
+          alignItems: "center"
         }}
-        title="Create Group"
+        title="Settings"
       >
         <UilSetting size="24" />
-      </div>
+      </Link>
 
       <NotificationBell />
 

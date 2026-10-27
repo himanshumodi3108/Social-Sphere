@@ -6,11 +6,11 @@ import './ProfileSide.css'
 const ProfileSide = () => {
   return (
     <div className="ProfileSide">
-      <div style={{paddingBottom:"10px", marginLeft:"35px"}}>
-      <LogoSearch/>
+      <div style={{ width: "100%", paddingBottom: "10px" }}>
+        <LogoSearch />
       </div>
-        <ProfileCard location = 'homepage'/>
-        <FollowersCard/>
+      <ProfileCard location="homepage" />
+      <FollowersCard />
     </div>
     )
 }

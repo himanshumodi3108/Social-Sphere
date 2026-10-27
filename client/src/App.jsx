@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useEffect, Suspense, lazy } from "react";
 import * as UserApi from "./api/UserRequests";
 import MobileNav from "./components/MobileNav/MobileNav";
+import { Analytics } from "@vercel/analytics/react";
 
 // Code splitting with React.lazy
 const Landing = lazy(() => import("./pages/Landing/Landing"));
@@ -16,6 +17,8 @@ const GroupDetail = lazy(() => import("./pages/GroupDetail/GroupDetail"));
 const SavedPosts = lazy(() => import("./pages/SavedPosts/SavedPosts"));
 const PrivacySettings = lazy(() => import("./pages/PrivacySettings/PrivacySettings"));
 const NotificationSettings = lazy(() => import("./pages/NotificationSettings/NotificationSettings"));
+const SecuritySettings = lazy(() => import("./pages/SecuritySettings/SecuritySettings"));
+const Settings = lazy(() => import("./pages/Settings/Settings"));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -133,12 +136,20 @@ function App() {
             element={user ? <SavedPosts /> : <Navigate to="../landing" />}
           />
           <Route
+            path="/settings"
+            element={user ? <Settings /> : <Navigate to="../landing" />}
+          />
+          <Route
+            path="/security-settings"
+            element={user ? <Navigate to="/settings?tab=security" replace /> : <Navigate to="../landing" />}
+          />
+          <Route
             path="/privacy-settings"
-            element={user ? <PrivacySettings /> : <Navigate to="../landing" />}
+            element={user ? <Navigate to="/settings?tab=privacy" replace /> : <Navigate to="../landing" />}
           />
           <Route
             path="/notification-settings"
-            element={user ? <NotificationSettings /> : <Navigate to="../landing" />}
+            element={user ? <Navigate to="/settings?tab=notifications" replace /> : <Navigate to="../landing" />}
           />
           <Route
             path="*"
