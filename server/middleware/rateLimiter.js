@@ -7,6 +7,7 @@ export const apiLimiter = rateLimit({
   message: { message: 'Too many requests from this IP, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 // Strict rate limiter for auth endpoints
@@ -17,6 +18,7 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
+  validate: { xForwardedForHeader: false },
 });
 
 // Rate limiter for file uploads
@@ -26,6 +28,7 @@ export const uploadLimiter = rateLimit({
   message: { message: 'Too many file uploads, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 // Rate limiter for search
@@ -35,4 +38,5 @@ export const searchLimiter = rateLimit({
   message: { message: 'Too many search requests, please try again later.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });

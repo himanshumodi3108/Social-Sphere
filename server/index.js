@@ -57,6 +57,10 @@ import GroupRoute from './routes/GroupRoute.js'
 
 const app = express();
 
+// Trust reverse proxy (Render, Vercel, Heroku, Cloudflare, etc.)
+// 1 means trust the first proxy hop in front of the app
+app.set('trust proxy', 1);
+
 // Load environment variables
 dotenv.config();
 
