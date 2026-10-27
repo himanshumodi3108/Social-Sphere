@@ -8,23 +8,38 @@
     <!-- Primary Meta Tags -->
     <title>SocialSphere - Connect, Share, and Engage with Your Community</title>
     <meta name="title" content="SocialSphere - Connect, Share, and Engage with Your Community" />
-    <meta name="description" content="SocialSphere is a modern social media platform where you can connect with friends, share posts, join groups, chat in real-time, and build meaningful communities." />
-    <meta name="keywords" content="social media, social network, connect, share, groups, chat, community, friends, posts, social sphere" />
-    <meta name="author" content="SocialSphere Team" />
-    <meta name="robots" content="index, follow" />
+    <meta name="description" content="SocialSphere is a modern social media platform where you can connect with friends, share posts, join interest groups, chat in real-time, and build meaningful communities." />
+    <meta name="keywords" content="social media, social network, community, connect with friends, share posts, online chat, discussion groups, SocialSphere" />
+    <meta name="author" content="Himanshu Modi" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="language" content="English" />
     
-    <!-- Open Graph / Facebook -->
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://himanshu-social-sphere.vercel.app/" />
+    
+    <!-- Open Graph / Facebook / LinkedIn / WhatsApp -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://himanshu-social-sphere.vercel.app/" />
     <meta property="og:title" content="SocialSphere - Connect, Share, and Engage with Your Community" />
     <meta property="og:description" content="SocialSphere is a modern social media platform where you can connect with friends, share posts, join groups, chat in real-time, and build meaningful communities." />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://himanshu-social-sphere.vercel.app/og-image.png" />
+    <meta property="og:image:secure_url" content="https://himanshu-social-sphere.vercel.app/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="SocialSphere Social Media Platform" />
     <meta property="og:site_name" content="SocialSphere" />
+    <meta property="og:locale" content="en_US" />
     
-    <!-- Additional Meta Tags -->
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://himanshu-social-sphere.vercel.app/" />
+    <meta name="twitter:title" content="SocialSphere - Connect, Share, and Engage with Your Community" />
+    <meta name="twitter:description" content="SocialSphere is a modern social media platform where you can connect with friends, share posts, join groups, chat in real-time, and build meaningful communities." />
+    <meta name="twitter:image" content="https://himanshu-social-sphere.vercel.app/og-image.png" />
+    <meta name="twitter:image:alt" content="SocialSphere Social Media Platform" />
+    
+    <!-- Mobile & PWA Tags -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -32,17 +47,66 @@
     <meta name="application-name" content="SocialSphere" />
     <meta name="msapplication-TileColor" content="#0096FF" />
     
-    <!-- Favicon -->
+    <!-- Favicon & Icons -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- Preconnect for Performance -->
+    <!-- Preconnect for Performance & Web Vitals -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    
+    <!-- Structured Data (JSON-LD) for Search Engines -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://himanshu-social-sphere.vercel.app/#website",
+          "url": "https://himanshu-social-sphere.vercel.app/",
+          "name": "SocialSphere",
+          "description": "A modern social media platform where you can connect with friends, share posts, join groups, and chat in real-time.",
+          "inLanguage": "en-US",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://himanshu-social-sphere.vercel.app/home?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://himanshu-social-sphere.vercel.app/#organization",
+          "name": "SocialSphere",
+          "url": "https://himanshu-social-sphere.vercel.app/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://himanshu-social-sphere.vercel.app/logo512.png",
+            "width": 512,
+            "height": 512
+          }
+        },
+        {
+          "@type": "WebApplication",
+          "@id": "https://himanshu-social-sphere.vercel.app/#webapp",
+          "name": "SocialSphere App",
+          "applicationCategory": "SocialNetworkingApplication",
+          "operatingSystem": "All",
+          "browserRequirements": "Requires JavaScript. Requires HTML5.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }
+      ]
+    }
+    </script>
     
     <style>
       body {
@@ -52,7 +116,25 @@
     </style>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <div style="padding: 2rem; font-family: sans-serif; max-width: 800px; margin: auto;">
+        <h1>SocialSphere - Connect, Share, and Engage with Your Community</h1>
+        <p>SocialSphere is a modern social networking platform that brings people together to share moments, connect with friends, discover vibrant communities, and communicate securely in real-time.</p>
+        <h2>Key Platform Features:</h2>
+        <ul>
+          <li><strong>Discover & Share:</strong> Share your thoughts, photos, and updates with friends and followers.</li>
+          <li><strong>Communities & Groups:</strong> Create and join topic-based groups to connect with like-minded individuals.</li>
+          <li><strong>Real-Time Messaging:</strong> Direct chat and group discussions with instant notifications.</li>
+          <li><strong>Privacy & Security:</strong> Robust Two-Factor Authentication (2FA), customizable privacy controls, and secure profile management.</li>
+        </ul>
+        <p>Please enable JavaScript in your browser to experience SocialSphere to the fullest.</p>
+        <p>
+          <a href="/landing">About SocialSphere</a> | 
+          <a href="/auth">Sign In or Create Account</a> | 
+          <a href="/groups">Explore Groups</a>
+        </p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/index.jsx"></script>
   </body>

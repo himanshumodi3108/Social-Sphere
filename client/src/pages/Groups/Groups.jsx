@@ -103,9 +103,10 @@ const Groups = () => {
   return (
     <div className="Groups">
       <SEO 
-        title="Groups - SocialSphere"
-        description="Discover and join groups on SocialSphere. Connect with communities, share interests, and build meaningful relationships."
+        title="Discover Groups & Communities - SocialSphere"
+        description="Discover and join vibrant interest groups and communities on SocialSphere. Connect with people sharing your passions and ideas."
         keywords="groups, communities, social groups, join groups, create groups, socialsphere"
+        url="https://himanshu-social-sphere.vercel.app/groups"
       />
       <div className="Groups-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

@@ -199,15 +199,16 @@ const getPostLookupStages = () => [
 // creating a post
 export const createPost = async (req, res) => {
   try {
+    const authorUserId = req.userId || req.body.userId;
     // Validate required fields
-    if (!req.body.userId) {
+    if (!authorUserId) {
       return res.status(400).json({ message: "User ID is required" });
     }
 
     const { _id, ...bodyWithoutId } = req.body;
     
     const postData = {
-      userId: bodyWithoutId.userId,
+      userId: authorUserId,
       desc: bodyWithoutId.desc || '',
       privacy: bodyWithoutId.privacy || 'public',
       likes: [],
@@ -442,7 +443,7 @@ export const deletePost = async (req, res) => {
 // like/dislike a post
 export const likePost = async (req, res) => {
   const id = req.params.id;
-  const { userId } = req.body;
+  const userId = req.userId || req.body.userId;
   
   try {
     if (!userId) {
@@ -721,7 +722,7 @@ export const addComment = async (req, res) => {
 export const likeComment = async (req, res) => {
   const postId = req.params.id;
   const commentId = req.params.commentId;
-  const { userId } = req.body;
+  const userId = req.userId || req.body.userId;
 
   try {
     if (!userId) {

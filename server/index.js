@@ -69,23 +69,36 @@ app.use(helmet({
 app.use(compression());
 
 // CORS configuration
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const FRONTEND_URL = (process.env.FRONTEND_URL || '').replace(/\/$/, '');
 const allowedOrigins = [
   'http://localhost:3000',
-  FRONTEND_URL
+  'http://127.0.0.1:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://himanshu-social-sphere.vercel.app',
+  ...(FRONTEND_URL ? [FRONTEND_URL] : [])
 ];
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Allow curl, mobile apps, or same-origin server requests
+  const normalized = origin.replace(/\/$/, '');
+  if (allowedOrigins.includes(normalized)) return true;
+  // Allow Vercel deployment subdomains and preview URLs
+  if (/^https:\/\/([a-zA-Z0-9_-]+\.)?vercel\.app$/.test(normalized)) return true;
+  return false;
+};
 
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
+    if (isAllowedOrigin(origin)) {
+      return callback(null, true);
     }
-    return callback(null, true);
+    logger.warn('Blocked CORS origin request', { origin });
+    return callback(null, false);
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 // Body parsing middleware

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Landing.css";
 import { UilUser, UilComment, UilImage, UilLock, UilBell, UilBookmark, UilShield } from "@iconscout/react-unicons";
+import SEO from "../../components/SEO/SEO";
 
 const Landing = () => {
   const navigate = useNavigate();
@@ -17,6 +18,11 @@ const Landing = () => {
 
   return (
     <div className="landing-page">
+      <SEO 
+        title="SocialSphere - Connect, Share, and Engage with Your Community"
+        description="Join SocialSphere, the modern social media network. Connect with friends, create and join communities, share posts, and chat securely in real-time."
+        url="https://himanshu-social-sphere.vercel.app/landing"
+      />
       {/* Navigation */}
       <nav className="landing-nav">
         <div className="nav-container">

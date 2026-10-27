@@ -5,6 +5,7 @@ import * as AuthApi from "../../api/AuthRequests.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import SEO from "../../components/SEO/SEO";
 import {
   UilUser,
   UilLock,
@@ -305,6 +306,11 @@ const Auth = () => {
 
   return (
     <div className="auth-container">
+      <SEO 
+        title={isSignUp ? "Sign Up for SocialSphere - Join the Community" : "Sign In to SocialSphere - Connect & Share"}
+        description="Sign in or register for SocialSphere to connect with friends, share updates, join groups, and chat in real-time."
+        url="https://himanshu-social-sphere.vercel.app/auth"
+      />
       <div className="auth-card-wrapper">
         {/* ================= LEFT BRAND & HERO COLUMN ================= */}
         <div className="auth-hero-pane">

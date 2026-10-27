@@ -167,92 +167,151 @@ export const getAllUsers = async (req, res) => {
 // Update a user
 export const updateUser = async (req, res) => {
   const id = req.params.id;
-  const { _id, currentUserAdmin, password, ...updateData } = req.body;
-  
-  if (id === _id || currentUserAdmin) {
-    try {
-      // Hash password if provided
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        updateData.password = await bcrypt.hash(password, salt);
-      }
+  const currentUserId = req.userId;
 
-      const user = await UserModel.findByIdAndUpdate(id, updateData, {
-        new: true,
-      });
-      
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+  if (!currentUserId) {
+    return res.status(401).json({ message: "Authentication required to update profile." });
+  }
 
-      // Clean up arrays
-      let needsSave = false;
-      if (Array.isArray(user.followers)) {
-        const originalLength = user.followers.length;
-        user.followers = user.followers.filter(f => f !== null && f !== undefined && f !== '');
-        if (user.followers.length !== originalLength) {
-          needsSave = true;
-        }
-      }
-      if (Array.isArray(user.following)) {
-        const originalLength = user.following.length;
-        user.following = user.following.filter(f => f !== null && f !== undefined && f !== '');
-        if (user.following.length !== originalLength) {
-          needsSave = true;
-        }
-      }
-      if (needsSave) {
-        await user.save();
-      }
-      
-      const userObj = user.toObject();
-      if (userObj.password) {
-        delete userObj.password;
-      }
-      
-      const token = jwt.sign(
-        { username: user.username, id: user._id },
-        process.env.JWTKEY,
-        { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
-      );
-
-      logger.info("User updated successfully", { userId: id });
-      res.status(200).json({ user: userObj, token });
-    } catch (error) {
-      logger.error("Error updating user", { error: error.message, userId: id });
-      res.status(500).json({ message: error.message || "Failed to update user" });
+  try {
+    // Verify requester authorization (must be account owner or verified admin in DB)
+    const requestingUser = await UserModel.findById(currentUserId);
+    if (!requestingUser) {
+      return res.status(401).json({ message: "Authenticated user no longer exists." });
     }
-  } else {
-    res.status(403).json({ message: "Access Denied! You can update only your own Account." });
+
+    const isSelf = String(currentUserId) === String(id);
+    const isAdmin = Boolean(requestingUser.isAdmin);
+
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ message: "Access Denied! You can update only your own account." });
+    }
+
+    const userToUpdate = await UserModel.findById(id);
+    if (!userToUpdate) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Whitelist allowed fields to prevent mass-assignment attacks
+    const allowedFields = [
+      'firstname',
+      'lastname',
+      'worksAt',
+      'livesIn',
+      'country',
+      'relationship',
+      'about',
+      'profilePicture',
+      'coverPicture',
+      'phone',
+      'email'
+    ];
+
+    const updateData = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        updateData[field] = req.body[field];
+      }
+    }
+
+    // If password update is requested, hash it
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateData.password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    // Only actual admins can modify admin status
+    if (isAdmin && req.body.isAdmin !== undefined) {
+      updateData.isAdmin = Boolean(req.body.isAdmin);
+    }
+
+    const user = await UserModel.findByIdAndUpdate(id, { $set: updateData }, {
+      new: true,
+    });
+
+    // Clean up arrays
+    let needsSave = false;
+    if (Array.isArray(user.followers)) {
+      const originalLength = user.followers.length;
+      user.followers = user.followers.filter(f => f !== null && f !== undefined && f !== '');
+      if (user.followers.length !== originalLength) {
+        needsSave = true;
+      }
+    }
+    if (Array.isArray(user.following)) {
+      const originalLength = user.following.length;
+      user.following = user.following.filter(f => f !== null && f !== undefined && f !== '');
+      if (user.following.length !== originalLength) {
+        needsSave = true;
+      }
+    }
+    if (needsSave) {
+      await user.save();
+    }
+    
+    const userObj = user.toObject();
+    if (userObj.password) {
+      delete userObj.password;
+    }
+    delete userObj.resetPasswordOtp;
+    delete userObj.resetPasswordExpires;
+    
+    const token = jwt.sign(
+      { username: user.username, id: user._id },
+      process.env.JWTKEY,
+      { expiresIn: process.env.JWT_EXPIRES_IN || "1h" }
+    );
+
+    logger.info("User updated successfully", { userId: id, updatedBy: currentUserId });
+    res.status(200).json({ user: userObj, token });
+  } catch (error) {
+    logger.error("Error updating user", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to update user" });
   }
 };
 
 // Delete a user
 export const deleteUser = async (req, res) => {
   const id = req.params.id;
-  const { currentUserId, currentUserAdmin } = req.body;
+  const currentUserId = req.userId;
 
-  if (currentUserId == id || currentUserAdmin) {
-    try {
-      await UserModel.findByIdAndDelete(id);
-      logger.info("User deleted successfully", { userId: id });
-      res.status(200).json({ message: "User Deleted Successfully!" });
-    } catch (error) {
-      logger.error("Error deleting user", { error: error.message, userId: id });
-      res.status(500).json({ message: error.message || "Failed to delete user" });
+  if (!currentUserId) {
+    return res.status(401).json({ message: "Authentication required to delete account." });
+  }
+
+  try {
+    const requestingUser = await UserModel.findById(currentUserId);
+    if (!requestingUser) {
+      return res.status(401).json({ message: "Authenticated user no longer exists." });
     }
-  } else {
-    res.status(403).json({ message: "Access Denied!" });
+
+    const isSelf = String(currentUserId) === String(id);
+    const isAdmin = Boolean(requestingUser.isAdmin);
+
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ message: "Access Denied! You can only delete your own account." });
+    }
+
+    const deletedUser = await UserModel.findByIdAndDelete(id);
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    logger.info("User deleted successfully", { userId: id, deletedBy: currentUserId });
+    res.status(200).json({ message: "User Deleted Successfully!" });
+  } catch (error) {
+    logger.error("Error deleting user", { error: error.message, userId: id });
+    res.status(500).json({ message: error.message || "Failed to delete user" });
   }
 };
 
 // Follow a User
 export const followUser = async (req, res) => {
   const id = req.params.id; // The user being followed
-  const _id = req.userId || req.body._id; // The logged-in user
+  const _id = req.userId; // The authenticated logged-in user
 
   if (!_id) {
-    logger.warn("No user ID found in follow request", { userId: req.userId, bodyId: req.body._id });
+    logger.warn("No authenticated user ID found in follow request");
     return res.status(401).json({ message: "User ID not found. Please log in again." });
   }
 
@@ -337,10 +396,10 @@ export const followUser = async (req, res) => {
 // Unfollow a User
 export const unfollowUser = async (req, res) => {
   const id = req.params.id;
-  const _id = req.userId || req.body._id;
+  const _id = req.userId;
 
   if (!_id) {
-    logger.warn("No user ID found in unfollow request", { userId: req.userId, bodyId: req.body._id });
+    logger.warn("No authenticated user ID found in unfollow request");
     return res.status(401).json({ message: "User ID not found. Please log in again." });
   }
 
@@ -406,7 +465,7 @@ export const unfollowUser = async (req, res) => {
 // Block a user
 export const blockUser = async (req, res) => {
   const blockUserId = req.params.id; // User to block
-  const userId = req.userId || req.body._id; // Current user
+  const userId = req.userId; // Current authenticated user
 
   if (!userId) {
     return res.status(401).json({ message: "User ID not found. Please log in again." });
@@ -454,7 +513,7 @@ export const blockUser = async (req, res) => {
 // Unblock a user
 export const unblockUser = async (req, res) => {
   const unblockUserId = req.params.id;
-  const userId = req.userId || req.body._id;
+  const userId = req.userId;
 
   if (!userId) {
     return res.status(401).json({ message: "User ID not found. Please log in again." });
@@ -483,7 +542,7 @@ export const unblockUser = async (req, res) => {
 // Save/Bookmark a post
 export const savePost = async (req, res) => {
   const postId = req.params.id;
-  const userId = req.userId || req.body._id;
+  const userId = req.userId;
 
   if (!userId) {
     return res.status(401).json({ message: "User ID not found. Please log in again." });
@@ -526,11 +585,19 @@ export const savePost = async (req, res) => {
 
 // Get saved posts
 export const getSavedPosts = async (req, res) => {
-  const userId = req.userId || req.params.id;
+  const requestedId = req.params.id;
+  const currentUserId = req.userId;
 
-  if (!userId) {
+  if (!currentUserId) {
     return res.status(401).json({ message: "User ID not found. Please log in again." });
   }
+
+  // Enforce privacy: users can only fetch their own saved bookmarks
+  if (requestedId && String(requestedId) !== String(currentUserId)) {
+    return res.status(403).json({ message: "Access denied. Saved posts are private to your account." });
+  }
+
+  const userId = currentUserId;
 
   try {
     const { page, limit, skip } = getPaginationParams(req);

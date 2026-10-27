@@ -3,6 +3,7 @@ import PostSide from "../components/PostSide/PostSide";
 import ProfileSide from "../components/profileSide/ProfileSide";
 import RightSide from "../components/RightSide/RightSide";
 import Stories from "../components/Stories/Stories";
+import SEO from "../components/SEO/SEO";
 import "./Home.css";
 
 const Home = () => {
@@ -10,6 +11,11 @@ const Home = () => {
 
   return (
     <div className="Home">
+      <SEO 
+        title="Feed & Timeline - SocialSphere"
+        description="View your personalized SocialSphere feed, connect with friends, and discover trending posts and stories."
+        url="https://himanshu-social-sphere.vercel.app/home"
+      />
       {/* ProfileSide - Always Visible in Desktop, Hidden in Mobile */}
       <ProfileSide />
 

@@ -1,14 +1,23 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
 Allow: /
+Allow: /landing
+Allow: /auth
+Allow: /groups
+
 Disallow: /api/
-Disallow: /auth/
+Disallow: /chat
 Disallow: /chat/
-Disallow: /profile/
-Disallow: /groups/*/chat
+Disallow: /settings
+Disallow: /settings/
+Disallow: /saved
+Disallow: /saved/
+Disallow: /security-settings
+Disallow: /privacy-settings
+Disallow: /notification-settings
+
+# Host
+Host: https://himanshu-social-sphere.vercel.app
 
 # Sitemap
 Sitemap: https://himanshu-social-sphere.vercel.app/sitemap.xml
-
-# Crawl-delay
-Crawl-delay: 1
