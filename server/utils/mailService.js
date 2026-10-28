@@ -150,16 +150,22 @@ const sendViaEmailJS = async ({ to, subject, html, text, code, name }) => {
   if (!serviceId || !templateId || !publicKey) return null;
 
   try {
+    const plainText = text || html.replace(/<[^>]*>?/gm, '').trim();
     const payload = {
       service_id: serviceId,
       template_id: templateId,
       user_id: publicKey,
       template_params: {
         to_email: to,
+        email: to,
         to_name: name || 'User',
+        name: name || 'User',
         subject: subject,
         code: code || '',
-        message: text || html.replace(/<[^>]*>?/gm, ''),
+        otp_code: code || '',
+        message: plainText,
+        content: plainText,
+        html_content: html,
       },
     };
 
@@ -311,6 +317,7 @@ export const sendWelcomeMessage = async ({ to, phone, name }) => {
         to,
         subject: `Welcome to SocialSphere, ${displayName}! 🎉`,
         html: welcomeHtml,
+        text: `Welcome to SocialSphere, ${displayName}! We're thrilled to welcome you to the community. Customize your profile, join groups, and start sharing your moments. Visit us at: ${process.env.CLIENT_URL || 'https://himanshu-social-sphere.vercel.app'}`,
         name: displayName,
       })
     );
@@ -354,6 +361,7 @@ export const sendOtpEmail = async ({ to, name, code, purpose = 'Security Verific
     to,
     subject: `Your SocialSphere verification code: ${code}`,
     html,
+    text: `Hello ${displayName}, your SocialSphere verification code is: ${code}. This code is valid for 10 minutes. If you did not request this code, please secure your account immediately or ignore this message.`,
     code,
     name: displayName,
   });
