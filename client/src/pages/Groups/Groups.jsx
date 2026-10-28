@@ -7,6 +7,7 @@ import Avatar from "../../components/Avatar/Avatar";
 import SEO from "../../components/SEO/SEO";
 import NavIcons from "../../components/NavIcons/NavIcons";
 import { UilSearch, UilTimes, UilUsersAlt, UilLock, UilUnlock } from "@iconscout/react-unicons";
+import { getImageUrl } from "../../config";
 
 const Groups = () => {
   const navigate = useNavigate();
@@ -164,9 +165,16 @@ const Groups = () => {
               >
                 {group.coverPicture && (
                   <img 
-                    src={process.env.REACT_APP_PUBLIC_FOLDER + group.coverPicture} 
+                    src={getImageUrl(group.coverPicture)} 
                     alt="Cover" 
                     className="group-cover"
+                    onError={(e) => {
+                      const sanitized = group.coverPicture.replace(/[^a-zA-Z0-9.-]/g, '_');
+                      const sanitizedUrl = getImageUrl(sanitized);
+                      if (e.target.src !== sanitizedUrl) {
+                        e.target.src = sanitizedUrl;
+                      }
+                    }}
                   />
                 )}
                 <div className="group-content">

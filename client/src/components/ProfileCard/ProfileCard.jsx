@@ -4,11 +4,12 @@ import { Link, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import * as UserApi from "../../api/UserRequests";
 import Avatar from "../Avatar/Avatar";
+import defaultCover from "../../img/cover.jpg";
+import { getImageUrl } from "../../config";
 
 const ProfileCard = ({location}) => {
   const { user: currentUser } = useSelector((state) => state.authReducer.authData);
   const posts = useSelector((state)=>state.postReducer.posts)
-  const serverPublic = process.env.REACT_APP_PUBLIC_FOLDER;
   const params = useParams();
   const [profileUser, setProfileUser] = useState(null);
 
@@ -189,11 +190,15 @@ const ProfileCard = ({location}) => {
   return (
     <div className="ProfileCard">
       <div className="ProfileImages">
-        <img src={
-            displayUser.coverPicture
-              ? serverPublic + displayUser.coverPicture
-              : serverPublic + "defaultCover.jpg"
-          } alt="CoverImage" />
+        <img
+          src={displayUser.coverPicture ? getImageUrl(displayUser.coverPicture, defaultCover) : defaultCover}
+          alt="Cover"
+          onError={(e) => {
+            if (e.target.src !== defaultCover) {
+              e.target.src = defaultCover;
+            }
+          }}
+        />
         <Avatar
           user={displayUser}
           profilePicture={displayUser.profilePicture}

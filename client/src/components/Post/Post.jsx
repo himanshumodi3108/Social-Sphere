@@ -11,6 +11,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Avatar from "../Avatar/Avatar";
 import * as UserApi from "../../api/UserRequests";
 import { UilEdit, UilBookmark, UilBookmarkFull, UilLocationPoint } from "@iconscout/react-unicons";
+import { getImageUrl } from "../../config";
 
 const Post = ({ data }) => {
   const dispatch = useDispatch();
@@ -496,15 +497,22 @@ const Post = ({ data }) => {
       {/* Post Image (if any) */}
       {data.image && (
         <img
-          src={process.env.REACT_APP_PUBLIC_FOLDER + data.image}
+          src={getImageUrl(data.image)}
           alt="Post content"
+          onError={(e) => {
+            const sanitized = data.image.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const sanitizedUrl = getImageUrl(sanitized);
+            if (e.target.src !== sanitizedUrl) {
+              e.target.src = sanitizedUrl;
+            }
+          }}
         />
       )}
 
       {/* Post Video (if any) */}
       {data.video && (
         <video
-          src={process.env.REACT_APP_PUBLIC_FOLDER + data.video}
+          src={getImageUrl(data.video)}
           controls
           style={{ width: "100%", maxHeight: "30rem", borderRadius: "0.5rem" }}
         />

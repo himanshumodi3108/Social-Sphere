@@ -12,6 +12,7 @@ import SEO from "../../components/SEO/SEO";
 import NavIcons from "../../components/NavIcons/NavIcons";
 import "./GroupDetail.css";
 import { UilEdit, UilTrashAlt, UilArrowLeft } from "@iconscout/react-unicons";
+import { getImageUrl } from "../../config";
 
 const GroupDetail = () => {
   const { id } = useParams();
@@ -183,9 +184,16 @@ const GroupDetail = () => {
       <div className="group-header">
         {group.coverPicture && (
           <img
-            src={process.env.REACT_APP_PUBLIC_FOLDER + group.coverPicture}
+            src={getImageUrl(group.coverPicture)}
             alt="Cover"
             className="group-cover"
+            onError={(e) => {
+              const sanitized = group.coverPicture.replace(/[^a-zA-Z0-9.-]/g, '_');
+              const sanitizedUrl = getImageUrl(sanitized);
+              if (e.target.src !== sanitizedUrl) {
+                e.target.src = sanitizedUrl;
+              }
+            }}
           />
         )}
         <div className="group-info">

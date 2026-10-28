@@ -5,6 +5,7 @@ import { getUnreadCount, getNotifications, markAsRead, markAllAsRead } from "../
 import { useSocket } from "../../context/SocketContext";
 import "./NotificationBell.css";
 import Noti from "../../img/noti.png";
+import Avatar from "../Avatar/Avatar";
 
 const NotificationBell = () => {
   const navigate = useNavigate();
@@ -154,17 +155,14 @@ const NotificationBell = () => {
                   className={`notification-item ${!notification.read ? 'unread' : ''}`}
                   onClick={() => handleNotificationClick(notification)}
                 >
-                  {notification.fromUser?.profilePicture ? (
-                    <img
-                      src={process.env.REACT_APP_PUBLIC_FOLDER + notification.fromUser.profilePicture}
-                      alt="User"
-                      className="notification-avatar"
-                    />
-                  ) : (
-                    <div className="notification-avatar-placeholder">
-                      {notification.fromUser?.name?.charAt(0) || 'U'}
-                    </div>
-                  )}
+                  <Avatar
+                    profilePicture={notification.fromUser?.profilePicture}
+                    firstname={notification.fromUser?.name?.split(' ')[0]}
+                    lastname={notification.fromUser?.name?.split(' ').slice(1).join(' ')}
+                    username={notification.fromUser?.username}
+                    size="40px"
+                    className="notification-avatar"
+                  />
                   <div className="notification-content">
                     <p className="notification-message">{notification.message}</p>
                     <span className="notification-time">
