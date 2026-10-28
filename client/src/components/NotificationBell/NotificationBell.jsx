@@ -146,7 +146,7 @@ const NotificationBell = () => {
           <div className="notification-list">
             {loading ? (
               <div className="loading">Loading...</div>
-            ) : notifications.length === 0 ? (
+            ) : !Array.isArray(notifications) || notifications.length === 0 ? (
               <div className="no-notifications">No notifications</div>
             ) : (
               notifications.map((notification) => (
