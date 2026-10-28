@@ -79,11 +79,24 @@ export const registerUser = async (req, res) => {
       hasPhone: Boolean(user.phone),
     });
 
+    // Determine client URL from request headers (origin / referer) or environment
+    let clientUrl = null;
+    if (req.headers.origin) {
+      clientUrl = req.headers.origin;
+    } else if (req.headers.referer) {
+      try {
+        clientUrl = new URL(req.headers.referer).origin;
+      } catch (e) {
+        // Ignore invalid referer URL
+      }
+    }
+
     // Send Welcome message asynchronously without blocking registration response
     sendWelcomeMessage({
       to: user.email,
       phone: user.phone,
       name: user.firstname,
+      clientUrl,
     }).catch((err) => {
       logger.warn("Failed to dispatch welcome notification", { error: err.message });
     });

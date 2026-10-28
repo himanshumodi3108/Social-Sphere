@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import "./Auth.css";
 import { logIn, signUp, verifyLoginMfa } from "../../actions/AuthActions.js";
 import * as AuthApi from "../../api/AuthRequests.js";
@@ -52,6 +52,11 @@ const Auth = () => {
   const [mfaCode, setMfaCode] = useState("");
   const [mfaSubmitting, setMfaSubmitting] = useState(false);
 
+  // Reset Redux loading state whenever view changes to prevent stuck disabled buttons
+  useEffect(() => {
+    dispatch({ type: "AUTH_RESET_LOADING" });
+  }, [viewMode, dispatch]);
+
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1); // 1 = request code, 2 = enter code & new pass
   const [forgotIdentifier, setForgotIdentifier] = useState("");
@@ -101,6 +106,7 @@ const Auth = () => {
   }, [data.email, data.phone]);
 
   const resetForm = () => {
+    dispatch({ type: "AUTH_RESET_LOADING" });
     setData(initialFormState);
     setErrorMessage("");
     setShowPassword(false);
@@ -438,9 +444,12 @@ const Auth = () => {
                     type="button"
                     className="auth-secondary-btn"
                     onClick={() => {
+                      dispatch({ type: "AUTH_RESET_LOADING" });
                       setViewMode("auth");
                       setMfaDetails(null);
                       setMfaCode("");
+                      setErrorMessage("");
+                      setData((prev) => ({ ...prev, password: "" }));
                     }}
                   >
                     <UilArrowLeft size="18" />

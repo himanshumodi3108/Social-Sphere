@@ -11,8 +11,9 @@ logs/
 *.log
 npm-debug.log*
 
-# Uploaded files (optional - uncomment if you don't want to track uploads)
-public/images/
+# Uploaded files
+public/images/*
+!public/images/.gitkeep
 
 # IDE
 .vscode/

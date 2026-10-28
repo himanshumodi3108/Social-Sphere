@@ -16,8 +16,8 @@ ReactDOM.render(
           <Routes>
             <Route path="*" element={<App />} />
           </Routes>
-          <Toaster position="top-right" richColors />
         </BrowserRouter>
+        <Toaster position="top-right" richColors duration={3500} closeButton />
       </SocketProvider>
     </ThemeProvider>
   </Provider>,

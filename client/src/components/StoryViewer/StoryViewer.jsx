@@ -6,6 +6,17 @@ import Avatar from "../Avatar/Avatar";
 import "./StoryViewer.css";
 import { UilTimes, UilAngleLeft, UilAngleRight, UilHeart } from "@iconscout/react-unicons";
 
+const getPublicBase = () => {
+  if (process.env.REACT_APP_PUBLIC_FOLDER) {
+    const p = process.env.REACT_APP_PUBLIC_FOLDER;
+    return p.endsWith('/') ? p : `${p}/`;
+  }
+  const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProduction 
+    ? 'https://social-sphere-da82.onrender.com/images/' 
+    : 'http://localhost:5000/images/';
+};
+
 const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onClose }) => {
   const { user } = useSelector((state) => state.authReducer.authData);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
@@ -261,12 +272,15 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
         <div className="story-content">
           {currentStory.image && (
             <img
-              src={`${process.env.REACT_APP_PUBLIC_FOLDER || 'http://localhost:5000/images/'}${encodeURIComponent(currentStory.image)}`}
+              src={
+                currentStory.image.startsWith('http') || currentStory.image.startsWith('data:')
+                  ? currentStory.image
+                  : `${getPublicBase()}${encodeURIComponent(currentStory.image.replace(/^\/+/, ''))}`
+              }
               alt="Story"
               className="story-image"
               onError={(e) => {
-                // console.error("Error loading story image:", currentStory.image);
-                const basePath = process.env.REACT_APP_PUBLIC_FOLDER || 'http://localhost:5000/images/';
+                const basePath = getPublicBase();
                 
                 // Try sanitized filename (spaces replaced with underscores)
                 const sanitizedFilename = currentStory.image.replace(/[^a-zA-Z0-9.-]/g, '_');
@@ -274,7 +288,6 @@ const StoryViewer = ({ stories, initialUserIndex = 0, initialStoryIndex = 0, onC
                 
                 // If current src doesn't match sanitized, try it
                 if (e.target.src !== sanitizedPath) {
-                  // console.log("Trying sanitized filename:", sanitizedPath);
                   e.target.src = sanitizedPath;
                   return; // Let the image try to load with sanitized name
                 }

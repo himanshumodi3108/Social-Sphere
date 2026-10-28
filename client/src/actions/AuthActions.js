@@ -8,7 +8,7 @@ export const logIn = (formData, navigate) => async (dispatch) => {
 
     // If server requires 2FA challenge
     if (data && data.mfaRequired) {
-      dispatch({ type: "AUTH_INIT_COMPLETE" });
+      dispatch({ type: "AUTH_RESET_LOADING" });
       return { mfaRequired: true, ...data };
     }
 

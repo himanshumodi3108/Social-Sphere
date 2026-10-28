@@ -49,7 +49,27 @@ const Avatar = ({
   const initials = getInitials();
   const backgroundColor = getBackgroundColor(initials);
   const imageUrl = profilePicture || user?.profilePicture;
-  const serverPublic = process.env.REACT_APP_PUBLIC_FOLDER;
+
+  const getPublicBase = () => {
+    if (process.env.REACT_APP_PUBLIC_FOLDER) {
+      const p = process.env.REACT_APP_PUBLIC_FOLDER;
+      return p.endsWith('/') ? p : `${p}/`;
+    }
+    const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+    return isProduction 
+      ? 'https://social-sphere-da82.onrender.com/images/'
+      : 'http://localhost:5000/images/';
+  };
+
+  const getFullSrc = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:') || url.startsWith('blob:')) {
+      return url;
+    }
+    const base = getPublicBase();
+    const clean = url.replace(/^\/+/, '');
+    return `${base}${encodeURIComponent(clean)}`;
+  };
 
   // If no image URL or image failed to load, show initials
   if (!imageUrl || imageError) {
@@ -79,7 +99,7 @@ const Avatar = ({
   // Show profile picture
   return (
     <img
-      src={serverPublic + imageUrl}
+      src={getFullSrc(imageUrl)}
       alt="Profile"
       className={`avatar ${className}`}
       style={{ 
@@ -89,7 +109,17 @@ const Avatar = ({
         objectFit: "cover",
         flexShrink: 0
       }}
-      onError={() => setImageError(true)}
+      onError={(e) => {
+        if (imageUrl) {
+          const sanitized = imageUrl.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const sanitizedUrl = getFullSrc(sanitized);
+          if (e.target.src !== sanitizedUrl) {
+            e.target.src = sanitizedUrl;
+            return;
+          }
+        }
+        setImageError(true);
+      }}
     />
   );
 };

@@ -273,10 +273,39 @@ export const sendSms = async ({ to, message }) => {
 };
 
 /**
+ * Determine the public frontend URL for emails and links
+ */
+export const getFrontendUrl = (clientOrigin) => {
+  // 1. If explicit request origin is provided (e.g. from browser request header), use it
+  if (clientOrigin && typeof clientOrigin === 'string' && clientOrigin.startsWith('http')) {
+    return clientOrigin.replace(/\/$/, '');
+  }
+
+  const isProduction = Boolean(process.env.RENDER || process.env.NODE_ENV === 'production');
+  const configured = process.env.CLIENT_URL || process.env.FRONTEND_URL;
+
+  // 2. If configured URL exists and is valid for the environment
+  if (configured) {
+    const trimmed = configured.trim().replace(/\/$/, '');
+    // If in production on Render/Vercel but configured was set to localhost, prioritize production URL
+    if (isProduction && (trimmed.includes('localhost') || trimmed.includes('127.0.0.1'))) {
+      return 'https://himanshu-social-sphere.vercel.app';
+    }
+    return trimmed;
+  }
+
+  // 3. Fallbacks
+  return isProduction
+    ? 'https://himanshu-social-sphere.vercel.app'
+    : 'http://localhost:3000';
+};
+
+/**
  * Send Welcome Email & SMS to newly registered user
  */
-export const sendWelcomeMessage = async ({ to, phone, name }) => {
+export const sendWelcomeMessage = async ({ to, phone, name, clientUrl }) => {
   const displayName = name || 'there';
+  const targetUrl = getFrontendUrl(clientUrl);
   const promises = [];
 
   if (to) {
@@ -301,7 +330,7 @@ export const sendWelcomeMessage = async ({ to, phone, name }) => {
             </ul>
           </div>
           <div style="text-align: center; margin: 32px 0;">
-            <a href="${process.env.CLIENT_URL || 'http://localhost:3000'}" style="background: linear-gradient(135deg, #0096FF, #0077cc); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 150, 255, 0.25);">
+            <a href="${targetUrl}" style="background: linear-gradient(135deg, #0096FF, #0077cc); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 150, 255, 0.25);">
               Explore SocialSphere
             </a>
           </div>
@@ -317,7 +346,7 @@ export const sendWelcomeMessage = async ({ to, phone, name }) => {
         to,
         subject: `Welcome to SocialSphere, ${displayName}! 🎉`,
         html: welcomeHtml,
-        text: `Welcome to SocialSphere, ${displayName}! We're thrilled to welcome you to the community. Customize your profile, join groups, and start sharing your moments. Visit us at: ${process.env.CLIENT_URL || 'https://himanshu-social-sphere.vercel.app'}`,
+        text: `Welcome to SocialSphere, ${displayName}! We're thrilled to welcome you to the community. Customize your profile, join groups, and start sharing your moments. Visit us at: ${targetUrl}`,
         name: displayName,
       })
     );
@@ -327,7 +356,7 @@ export const sendWelcomeMessage = async ({ to, phone, name }) => {
     promises.push(
       sendSms({
         to: phone,
-        message: `Welcome to SocialSphere, ${displayName}! Your account is now active. Explore at ${process.env.CLIENT_URL || 'http://localhost:3000'}`,
+        message: `Welcome to SocialSphere, ${displayName}! Your account is now active. Explore at ${targetUrl}`,
       })
     );
   }

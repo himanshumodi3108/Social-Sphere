@@ -34,12 +34,17 @@ import { existsSync, mkdirSync } from 'fs';
 // Fix Mongoose deprecation warning
 mongoose.set('strictQuery', false);
 
-// Create logs directory if it doesn't exist
+// Create logs and public/images directory if they don't exist
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const logsDir = join(__dirname, 'logs');
 if (!existsSync(logsDir)) {
   mkdirSync(logsDir, { recursive: true });
+}
+
+const imagesDir = join(__dirname, 'public', 'images');
+if (!existsSync(imagesDir)) {
+  mkdirSync(imagesDir, { recursive: true });
 }
 
 
@@ -122,9 +127,35 @@ app.use((req, res, next) => {
   next();
 });
 
-// Static file serving
-app.use(express.static('public')); 
-app.use('/images', express.static('public/images'));
+// Static file serving with directory resilience and space/underscore fallback
+const publicDir = join(__dirname, 'public');
+
+app.use('/images', (req, res, next) => {
+  const rawPath = req.path.replace(/^\/+/, '');
+  if (!rawPath) return next();
+  const filename = decodeURIComponent(rawPath);
+  
+  const exactPath = join(imagesDir, filename);
+  if (existsSync(exactPath)) {
+    return res.sendFile(exactPath);
+  }
+  
+  // Try sanitized filename (spaces replaced with underscores)
+  const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const sanitizedPath = join(imagesDir, sanitizedFilename);
+  if (existsSync(sanitizedPath)) {
+    return res.sendFile(sanitizedPath);
+  }
+  
+  next();
+});
+
+app.use(express.static(publicDir)); 
+app.use('/images', express.static(imagesDir));
+if (process.cwd() !== __dirname) {
+  app.use(express.static(join(process.cwd(), 'public')));
+  app.use('/images', express.static(join(process.cwd(), 'public', 'images')));
+}
 
 // Request logging
 app.use((req, res, next) => {

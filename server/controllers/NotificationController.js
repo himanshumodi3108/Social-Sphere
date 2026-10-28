@@ -10,7 +10,7 @@ let emitNotificationFn = null;
 const getEmitNotification = async () => {
   if (!emitNotificationFn) {
     try {
-      const socketModule = await import("../socket/index.js");
+      const socketModule = await import("../../socket/index.js");
       emitNotificationFn = socketModule.emitNotification;
     } catch (error) {
       logger.error("Error importing socket module", { error: error.message });

@@ -1,12 +1,102 @@
 import React, { useState, useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { getTimelineStories, createStory, deleteStory } from "../../api/StoryRequests";
 import { uploadImage } from "../../actions/UploadAction";
-import { useDispatch } from "react-redux";
 import Avatar from "../Avatar/Avatar";
 import StoryViewer from "../StoryViewer/StoryViewer";
 import "./Stories.css";
 import { UilPlus, UilTimes } from "@iconscout/react-unicons";
+
+const getPublicBase = () => {
+  if (process.env.REACT_APP_PUBLIC_FOLDER) {
+    const p = process.env.REACT_APP_PUBLIC_FOLDER;
+    return p.endsWith('/') ? p : `${p}/`;
+  }
+  const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+  return isProduction 
+    ? 'https://social-sphere-da82.onrender.com/images/' 
+    : 'http://localhost:5000/images/';
+};
+
+const getMediaUrl = (filename) => {
+  if (!filename) return '';
+  if (
+    filename.startsWith('http://') ||
+    filename.startsWith('https://') ||
+    filename.startsWith('data:') ||
+    filename.startsWith('blob:')
+  ) {
+    return filename;
+  }
+  const base = getPublicBase();
+  const clean = filename.replace(/^\/+/, '');
+  return `${base}${encodeURIComponent(clean)}`;
+};
+
+// Story Thumbnail component with multi-level image fallback and initials recovery
+const StoryThumbnail = ({ image, user, alt = "Story", size = "60px" }) => {
+  const initialSource = image || user?.profilePicture;
+  const [currentSrc, setCurrentSrc] = useState(initialSource ? getMediaUrl(initialSource) : null);
+  const [failed, setFailed] = useState(!initialSource);
+  const [triedSanitized, setTriedSanitized] = useState(false);
+  const [triedProfile, setTriedProfile] = useState(false);
+
+  useEffect(() => {
+    const src = image || user?.profilePicture;
+    setCurrentSrc(src ? getMediaUrl(src) : null);
+    setFailed(!src);
+    setTriedSanitized(false);
+    setTriedProfile(false);
+  }, [image, user?.profilePicture]);
+
+  const handleError = () => {
+    const targetFile = image || user?.profilePicture;
+    // Step 1: Try sanitized filename (replace spaces / special chars with underscores)
+    if (!triedSanitized && targetFile) {
+      setTriedSanitized(true);
+      const sanitized = targetFile.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const sanitizedUrl = getMediaUrl(sanitized);
+      if (sanitizedUrl !== currentSrc) {
+        setCurrentSrc(sanitizedUrl);
+        return;
+      }
+    }
+
+    // Step 2: If we were showing a story image, try falling back to the author's profile picture
+    if (!triedProfile && image && user?.profilePicture && user.profilePicture !== image) {
+      setTriedProfile(true);
+      const profileUrl = getMediaUrl(user.profilePicture);
+      if (profileUrl !== currentSrc) {
+        setCurrentSrc(profileUrl);
+        return;
+      }
+    }
+
+    // Step 3: All image attempts failed, fallback to initials Avatar
+    setFailed(true);
+  };
+
+  if (!currentSrc || failed) {
+    return (
+      <Avatar
+        user={user}
+        firstname={user?.firstname || user?.name?.split(' ')[0]}
+        lastname={user?.lastname || user?.name?.split(' ').slice(1).join(' ')}
+        username={user?.username}
+        size={size}
+      />
+    );
+  }
+
+  return (
+    <img
+      src={currentSrc}
+      alt={alt}
+      className="story-avatar"
+      onError={handleError}
+    />
+  );
+};
 
 const Stories = () => {
   const { user } = useSelector((state) => state.authReducer.authData);
@@ -51,21 +141,19 @@ const Stories = () => {
 
     setUploading(true);
     try {
-      // Upload image first
+      // Upload image first with pre-sanitized filename
       const formData = new FormData();
-      const fileName = Date.now() + storyImage.name;
-      formData.append("name", fileName);
+      const safeUploadName = `${Date.now()}_${storyImage.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      formData.append("name", safeUploadName);
       formData.append("file", storyImage);
 
       const uploadResponse = await dispatch(uploadImage(formData));
       // Get the sanitized filename from the upload response
-      // The server sanitizes filenames (replaces spaces with underscores)
-      // Response structure: { data: { filename: "...", path: "..." } }
-      // axios wraps the response in { data: { ... } }
       const sanitizedFileName = uploadResponse?.payload?.data?.filename || 
                                 uploadResponse?.payload?.data?.data?.filename ||
                                 uploadResponse?.data?.filename ||
-                                fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+                                uploadResponse?.data?.name ||
+                                safeUploadName;
 
       // Create story with the sanitized filename
       await createStory({
@@ -102,27 +190,21 @@ const Stories = () => {
     return <div className="stories-loading">Loading stories...</div>;
   }
 
+  // Find if current user has an active story in timeline
+  const myStoryGroup = stories.find((s) => String(s.user?._id) === String(user?._id));
+  const myLatestStory = myStoryGroup?.stories?.[myStoryGroup.stories.length - 1] || myStoryGroup?.stories?.[0];
+
   return (
     <div className="Stories">
       <div className="stories-container">
         {/* Create Story Card */}
         <div className="story-card create-story" onClick={() => setShowCreateModal(true)}>
           <div className="story-image-wrapper">
-            {user?.profilePicture ? (
-              <img
-                src={process.env.REACT_APP_PUBLIC_FOLDER + user.profilePicture}
-                alt="Your story"
-                className="story-avatar"
-              />
-            ) : (
-              <Avatar
-                user={user}
-                firstname={user?.firstname}
-                lastname={user?.lastname}
-                username={user?.username}
-                size="60px"
-              />
-            )}
+            <StoryThumbnail
+              image={myLatestStory?.image || user?.profilePicture}
+              user={user}
+              alt="Your story"
+            />
             <div className="add-story-icon">
               <UilPlus size="24" color="white" />
             </div>
@@ -130,40 +212,36 @@ const Stories = () => {
           <span className="story-username">Your Story</span>
         </div>
 
-        {/* Other Users' Stories */}
-        {stories.map((storyGroup, groupIndex) => (
-          <div
-            key={storyGroup.user._id}
-            className="story-card"
-            onClick={() => {
-              setViewerInitialUserIndex(groupIndex);
-              setShowViewer(true);
-            }}
-          >
-            <div className="story-image-wrapper">
-              {storyGroup.user.profilePicture ? (
-                <img
-                  src={process.env.REACT_APP_PUBLIC_FOLDER + storyGroup.user.profilePicture}
-                  alt={storyGroup.user.name}
-                  className="story-avatar"
+        {/* Stories List */}
+        {stories.map((storyGroup, groupIndex) => {
+          const latestStory = storyGroup.stories?.[storyGroup.stories.length - 1] || storyGroup.stories?.[0];
+          const isCurrentUser = String(storyGroup.user?._id) === String(user?._id);
+
+          return (
+            <div
+              key={storyGroup.user?._id || groupIndex}
+              className="story-card"
+              onClick={() => {
+                setViewerInitialUserIndex(groupIndex);
+                setShowViewer(true);
+              }}
+            >
+              <div className="story-image-wrapper">
+                <StoryThumbnail
+                  image={latestStory?.image || storyGroup.user?.profilePicture}
+                  user={storyGroup.user}
+                  alt={storyGroup.user?.name || storyGroup.user?.username || "Story"}
                 />
-              ) : (
-                <Avatar
-                  firstname={storyGroup.user.name?.split(' ')[0]}
-                  lastname={storyGroup.user.name?.split(' ').slice(1).join(' ')}
-                  username={storyGroup.user.username}
-                  size="60px"
-                />
-              )}
-              {storyGroup.stories && storyGroup.stories.length > 0 && (
-                <div className="story-indicator"></div>
-              )}
+                {storyGroup.stories && storyGroup.stories.length > 0 && (
+                  <div className="story-indicator"></div>
+                )}
+              </div>
+              <span className="story-username">
+                {isCurrentUser ? "You" : (storyGroup.user?.name?.split(' ')[0] || storyGroup.user?.username)}
+              </span>
             </div>
-            <span className="story-username">
-              {storyGroup.user.name?.split(' ')[0] || storyGroup.user.username}
-            </span>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Create Story Modal */}
